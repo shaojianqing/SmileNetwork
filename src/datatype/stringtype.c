@@ -44,6 +44,15 @@ String *createString(char *value) {
 	return string;
 }
 
+void releaseString(String* string) {
+	if (string != NULL) {
+		if (string->value != NULL) {
+			free(string->value);
+		}
+		free(string);
+	}
+}
+
 static void bindFunction(String *this) {
 	if (this!=NULL) {
 		this->getLength = getLength;

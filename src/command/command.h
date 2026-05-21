@@ -2,8 +2,6 @@ typedef struct Command Command;
 
 typedef void (*Executor)(Command *command);
 
-typedef void (*Release)(Command *this);
-
 struct Command {
 
     String *name;
@@ -11,8 +9,6 @@ struct Command {
     String *parameter;
 
     Executor execute;
-
-    Release release;
 };
 
 void initCommandConfig();

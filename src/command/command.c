@@ -174,16 +174,18 @@ static Command *buildCommand(String *name, String *parameter, Executor executor)
         command->name = name;
         command->parameter = parameter;
         command->execute = executor;
-        command->release = release;
         
         return command;
     }
     return NULL;
 }
 
-static void release(Command *this) {
-    if (this != NULL) {
-        free(this);
+static void releaseCommand(Command *command) {
+    if (command != NULL) {
+        releaseString(command->name);
+        releaseString(command->parameter);
+
+        free(command);
     }
 }
 
@@ -196,6 +198,7 @@ void runCommandEvent() {
         Command *command = parseCommand(commandBuffer);
         if (command != NULL) {
             command->execute(command);
+            releaseCommand(command);
         }
     }
 }

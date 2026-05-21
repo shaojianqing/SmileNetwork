@@ -17,6 +17,8 @@ struct String {
 
 String* createString(char *value);
 
+void releaseString(String* string);
+
 int StringHashCode(Object *string);
 
 bool StringEqualFun(Object *string1, Object *string2);
