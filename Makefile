@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/command.o tgt/executor.o tgt/stringtype.o tgt/hashmap.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/result.o tgt/vector.o tgt/traindata.o
 
 .PHONY : build clean
 
@@ -21,6 +21,12 @@ build : clean $(TARGET)
 
 clean :
 	 rm -rf $(TARGET) $(TGT)
+
+tgt/stringtype.o : src/datatype/stringtype.c src/datatype/stringtype.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/hashmap.o : src/datatype/hashmap.c src/datatype/hashmap.h
+	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/mnist.o : src/dataset/mnist.c src/dataset/mnist.h
 	$(CC) $(CCFLAGES) $< -o $@
@@ -50,6 +56,12 @@ tgt/vector.o : src/network/vector.c src/network/vector.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/traindata.o : src/traindata/traindata.c src/traindata/traindata.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/command.o : src/command/command.c src/command/command.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/executor.o : src/command/executor.c src/command/executor.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/main.o : src/main.c

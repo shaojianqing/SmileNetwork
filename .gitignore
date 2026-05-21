@@ -46,6 +46,7 @@
 *.mod*
 *.cmd
 
+*.DS_Store/
 .vscode/
 .gitignore
 .tmp_versions/
