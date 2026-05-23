@@ -271,19 +271,19 @@ void runCommandEvent() {
 }
 
 void showNetworkInfo() {
-    printf("\n\n");
+    printf("\n");
     printf(" \033[33m****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** \n\033[0m");
     printf(" \033[33m** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  \n\033[0m");
     printf(" \033[33m** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   \n\033[0m");
     printf(" \033[33m** ** **   **   **       ** ** **   **  ** ****   *******  *****    ** ** **    **    *** ***   **  ** ****   ****  \n\033[0m");
     printf(" \033[33m****  **** **** **       **  * ****  ****  ** *****     ** *****    **  * ****  **     ** **     ****  ** *** ** ** \n\033[0m");
-    printf("\n\n");
+    printf("\n");
     printf("+-------------------------------------------------------------------------------------------------------------------+\n");
     printf("+ \033[37mSmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  \033[0m+\n");
     printf("+ \033[37mbe configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     \033[0m+\n");
     printf("+ \033[37mhttps://github.com/shaojianqing/SmileNetwork                                                                      \033[0m+\n");
     printf("+-------------------------------------------------------------------------------------------------------------------+\n");
-    printf("\n\n");
+    printf("\n");
 }
 
 void showCommandInfo() {
@@ -310,7 +310,7 @@ void showCommandInfo() {
     printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
     printf("+ \033[36mquit\033[0m              + \033[37mquit running process without saving model data to model file anyway.\033[0m                          +\n");
     printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("\n\n");
+    printf("\n");
 }
 
 static bool parseCommandElement(char *commandLine, char *commandElement) {
