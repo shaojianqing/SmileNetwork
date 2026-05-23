@@ -2,6 +2,8 @@ typedef struct Command Command;
 
 typedef void (*Executor)(Command *command);
 
+typedef bool (*RequireConfirm)(Command *command);
+
 struct Command {
 
     String *name;
@@ -9,6 +11,8 @@ struct Command {
     String *parameter;
 
     Executor execute;
+
+    RequireConfirm requireConfirm;
 };
 
 void initCommandConfig();

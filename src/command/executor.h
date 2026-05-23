@@ -17,3 +17,14 @@ void predictExecutor(Command *command);
 void showHelpExecutor(Command *command);
 
 void quitExecutor(Command *command);
+
+
+bool loadConfigRequireConfirm(Command *command);
+
+bool loadModelRequireConfirm(Command *command);
+
+bool saveModelRequireConfirm(Command *command);
+
+bool startTrainRequireConfirm(Command *command);
+
+bool quitRequireConfirm(Command *command);
