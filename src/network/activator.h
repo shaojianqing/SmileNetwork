@@ -1,3 +1,5 @@
+typedef struct Activator Activator;
+
 typedef enum ActivatorKind ActivatorKind;
 
 enum ActivatorKind {
@@ -6,6 +8,13 @@ enum ActivatorKind {
     RELU = 3
 };
 
-typedef Vector* (*Activator)(Vector *vector);
+struct Activator {
 
-Activator getActivator(ActivatorKind kind);
+    Vector* (*activate)(Vector *vector);
+
+    Vector* (*derivative)(Vector *vector);
+};
+
+void initActivatorMap();
+
+Activator* getActivator(ActivatorKind kind);

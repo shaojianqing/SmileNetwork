@@ -11,9 +11,11 @@ struct Vector {
 
     Result* (*add)(Vector *this, Vector *vector);
 
-    void (*retain)(Vector *this);
+    Result* (*addBias)(Vector *this, Bias *bias);
 
-    void (*release)(Vector *this);
+    float (*getValue)(Vector *this, int index);
+
+    void (*setValue)(Vector *this, int index, float value);
 };
 
-Vector *createVector(float *elements, int count);
+Vector *createVector(int count);

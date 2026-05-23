@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/command.o tgt/executor.o tgt/stringtype.o tgt/hashmap.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
 
 .PHONY : build clean
 
@@ -23,6 +23,9 @@ clean :
 	 rm -rf $(TARGET) $(TGT)
 
 tgt/stringtype.o : src/datatype/stringtype.c src/datatype/stringtype.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/arraylist.o : src/datatype/arraylist.c src/datatype/arraylist.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/hashmap.o : src/datatype/hashmap.c src/datatype/hashmap.h
@@ -46,6 +49,9 @@ tgt/layer.o : src/network/layer.c src/network/layer.h
 tgt/loss.o : src/network/loss.c src/network/loss.h
 	$(CC) $(CCFLAGES) $< -o $@
 
+tgt/bias.o : src/network/bias.c src/network/bias.h
+	$(CC) $(CCFLAGES) $< -o $@
+
 tgt/matrix.o : src/network/matrix.c src/network/matrix.h
 	$(CC) $(CCFLAGES) $< -o $@
 
@@ -56,6 +62,9 @@ tgt/vector.o : src/network/vector.c src/network/vector.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/traindata.o : src/traindata/traindata.c src/traindata/traindata.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/logger.o : src/logger/logger.c src/logger/logger.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/command.o : src/command/command.c src/command/command.h

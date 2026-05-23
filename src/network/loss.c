@@ -1,7 +1,9 @@
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../datatype/stringtype.h"
 
+#include "bias.h"
 #include "result.h"
 #include "vector.h"
 #include "loss.h"

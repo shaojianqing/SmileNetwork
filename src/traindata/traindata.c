@@ -2,7 +2,9 @@
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../datatype/stringtype.h"
 #include "../network/result.h"
+#include "../network/bias.h"
 #include "../network/vector.h"
 #include "../network/label.h"
 

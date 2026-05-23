@@ -1,16 +1,34 @@
-typedef struct Network Network;
+typedef struct NetworkConfig NetworkConfig;
 
-struct Network {
+typedef struct NeuralNetwork NeuralNetwork;
 
-    Layer *layers;
+struct NetworkConfig {
 
-    int layerCount;
+    LayerConfig *inputLayerConfig;
 
-    void (*addLayer)(Network *this, Layer *layer);
+    LayerConfig *outputLayerConfig;
 
-    Result* (*train)(Network *this, TrainData **tainDataList, int trainDataCount);
+    LayerConfig **hiddenLayerConfigList;
 
-    Result* (*predict)(Network *this, Vector *vector);
+    int hiddenLayerConfigCount;
 };
 
-Network* createNetwork();
+struct NeuralNetwork {
+
+    InputLayer *inputLayer;
+
+    OutputLayer *outputLayer;
+
+    HiddenLayer **hiddenLayerList;
+
+    int hiddenLayerCount;
+
+    Result* (*train)(NeuralNetwork *this, TrainData **tainDataList, int trainDataCount);
+
+    Result* (*predict)(NeuralNetwork *this, Vector *vector);
+};
+
+NeuralNetwork* buildNeuralNetwork(NetworkConfig *config);
+
+NeuralNetwork* getNeuralNetwork();
+

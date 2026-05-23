@@ -37,16 +37,14 @@ struct HashMap {
 
 	bool (*containsKey)(HashMap *this, Object *key);
 
-	void (*printHashMap)(HashMap *this);
-
 	HashCode hashCode;
 
-	EqualFun equalFun;
+	EqualFunc equalFunc;
 };
 
-HashMap* createHashMap(HashCode hashCode, EqualFun equalFun, int capacity);
+HashMap* createHashMap(HashCode hashCode, EqualFunc equalFunc, int capacity);
 
-void destroyHashMap(HashMap* this);
+void releaseHashMap(HashMap* this);
 
 int StringHashCode(Object *string);
 
