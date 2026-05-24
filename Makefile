@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
 
 .PHONY : build clean
 
@@ -29,6 +29,9 @@ tgt/arraylist.o : src/datatype/arraylist.c src/datatype/arraylist.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/hashmap.o : src/datatype/hashmap.c src/datatype/hashmap.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/json.o : src/json/json.c src/json/json.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/mnist.o : src/dataset/mnist.c src/dataset/mnist.h

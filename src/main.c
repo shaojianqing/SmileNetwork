@@ -11,6 +11,8 @@
 #include "network/vector.h"
 #include "network/activator.h"
 
+#include "json/json.h"
+
 int main(int argc, char **argv) {
 
     initLoggerConfig();
