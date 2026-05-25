@@ -7,6 +7,7 @@
 #include "../datatype/datatype.h"
 #include "../datatype/stringtype.h"
 #include "../datatype/hashmap.h"
+#include "../printer/printer.h"
 
 #include "command.h"
 #include "executor.h"
@@ -150,7 +151,7 @@ Command* parseCommand(char *commandLine) {
     char *commandName = (char *)malloc(COMMAND_NAME_BUFFER_SIZE);
     bool success = parseCommandElement(commandLine, commandName);
     if (!success) {
-        printf("\033[31mCommand name is illegal or invalid^o^\n\033[0m");
+        printMessage(RED, "Command name is illegal or invalid^o^\n");
         return NULL;
     }
     String *name = createString(commandName);
@@ -162,7 +163,7 @@ Command* parseCommand(char *commandLine) {
             char *commandParam = (char *)malloc(COMMAND_PARAM_BUFFER_SIZE);
             bool success = parseCommandElement(commandLine, commandParam);
             if (!success) {
-                printf("\033[31mCommand parameter is blank[%s]^o^\n\033[0m", name->getValue(name));
+                printMessage(RED, "Command parameter is blank[%s]^o^\n", name->getValue(name));
                 return NULL;
             }
             
@@ -173,7 +174,7 @@ Command* parseCommand(char *commandLine) {
         }
         return buildCommand(name, NULL, configuration->executor, configuration->requireConfirm);
     } else {
-        printf("\033[31mCommand is not supported[%s]^o^\n\033[0m", name->getValue(name));
+        printMessage(RED, "Command is not supported[%s]^o^\n", name->getValue(name));
         return NULL;
     }
 }
@@ -228,14 +229,17 @@ void runCommandEvent() {
     Command *currentCommand = NULL;
     bool commandRequireConfirm = false;
     commandBuffer = (char *)malloc(COMMAND_BUFFER_SIZE);
-    printf("\033[37mPlease enter command here^+^\n\033[0m");
     while(true) {
+        if (!commandRequireConfirm) {
+            printMessage(GREEN, "Please enter command here^+^\n");
+        }
+        
         fgets(commandBuffer, COMMAND_BUFFER_SIZE, stdin);
         commandBuffer[strcspn(commandBuffer, "\n")] = 0;
         if (commandRequireConfirm) {
             int state = parseConfirmState(commandBuffer);
             if (state == CONFIRM_STATE_UNKNOWN) {
-                printf("\033[37mPlease enter confirm decision[Yes|No]!\n\033[0m");
+                printMessage(YELLOW, "Please enter confirm decision[Yes|No]!\n");
                 continue;
             }
 
@@ -252,9 +256,8 @@ void runCommandEvent() {
                 commandRequireConfirm = false;
                 currentCommand = NULL;
             }
-
-            printf("\033[37mPlease enter command here^+^\n\033[0m");
         } else {
+            
             currentCommand = parseCommand(commandBuffer);
             if (currentCommand != NULL) {
                 if (currentCommand->requireConfirm(currentCommand)) {
@@ -263,7 +266,6 @@ void runCommandEvent() {
                     currentCommand->execute(currentCommand);
                     releaseCommand(currentCommand);
                     currentCommand = NULL;
-                    printf("\033[37mPlease enter command here^+^\n\033[0m");
                 }
             }
         }
@@ -271,46 +273,46 @@ void runCommandEvent() {
 }
 
 void showNetworkInfo() {
-    printf("\n");
-    printf(" \033[33m****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** \n\033[0m");
-    printf(" \033[33m** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  \n\033[0m");
-    printf(" \033[33m** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   \n\033[0m");
-    printf(" \033[33m** ** **   **   **       ** ** **   **  ** ****   *******  *****    ** ** **    **    *** ***   **  ** ****   ****  \n\033[0m");
-    printf(" \033[33m****  **** **** **       **  * ****  ****  ** *****     ** *****    **  * ****  **     ** **     ****  ** *** ** ** \n\033[0m");
-    printf("\n");
-    printf("+-------------------------------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[37mSmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  \033[0m+\n");
-    printf("+ \033[37mbe configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     \033[0m+\n");
-    printf("+ \033[37mhttps://github.com/shaojianqing/SmileNetwork                                                                      \033[0m+\n");
-    printf("+-------------------------------------------------------------------------------------------------------------------+\n");
-    printf("\n");
+    printMessage(CYAN, "\n");
+    printMessage(CYAN, " ****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** \n");
+    printMessage(CYAN, " ** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  \n");
+    printMessage(CYAN, " ** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   \n");
+    printMessage(CYAN, " ** ** **   **   **       ** ** **   **  ** ****   *******  *****    ** ** **    **    *** ***   **  ** ****   ****  \n");
+    printMessage(CYAN, " ****  **** **** **       **  * ****  ****  ** *****     ** *****    **  * ****  **     ** **     ****  ** *** ** ** \n");
+    printMessage(CYAN, "\n");
+    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ SmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  +\n");
+    printMessage(WHITE, "+ be configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     +\n");
+    printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork                                                                      +\n");
+    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "\n");
 }
 
 void showCommandInfo() {
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[37mCommand\033[0m           + \033[37mDescription\033[0m                                                                                   +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mloadConfig\033[0m        + \033[37mload model configuration file from config path parameter. It is used to initialize model.\033[0m     +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mloadModel\033[0m         + \033[37mload model data file from mdoel path parameter. It is used to load model saved before.\033[0m        +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36msaveModel\033[0m         + \033[37msave model data to mdoel file with path parameter. It is used to save model after trained.\033[0m    +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mshowModel\033[0m         + \033[37mshow model structure with layer and dimension. It is used to show model configurations.\033[0m       +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mloadMnistData\033[0m     + \033[37mload mnist train data from mnist data file path parameter. Support mnist-fashion dataset.\033[0m     +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mloadMnistLabel\033[0m    + \033[37mload mnist train label from mnist label file path parameter. Support mnist-fashion dataset.\033[0m   +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mstartTrain\033[0m        + \033[37mstart to train model with loaded data and label. It is called after train data is loaded.\033[0m     +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mpredict\033[0m           + \033[37mpredict model label with model data by the trained model. It is called only after trained.\033[0m    +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mshowHelp\033[0m          + \033[37mshow command help information list just as above content.\033[0m                                     +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("+ \033[36mquit\033[0m              + \033[37mquit running process without saving model data to model file anyway.\033[0m                          +\n");
-    printf("+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printf("\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ Command           + Description                                                                                   +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ loadConfig        + load model configuration file from config path parameter. It is used to initialize model.     +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ loadModel         + load model data file from mdoel path parameter. It is used to load model saved before.        +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ saveModel         + save model data to mdoel file with path parameter. It is used to save model after trained.    +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ showModel         + show model structure with layer and dimension. It is used to show model configurations.       +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ loadMnistData     + load mnist train data from mnist data file path parameter. Support mnist-fashion dataset.     +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ loadMnistLabel    + load mnist train label from mnist label file path parameter. Support mnist-fashion dataset.   +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ startTrain        + start to train model with loaded data and label. It is called after train data is loaded.     +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ predict           + predict model label with model data by the trained model. It is called only after trained.    +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ showHelp          + show command help information list just as above content.                                     +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+ quit              + quit running process without saving model data to model file anyway.                          +\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "\n");
 }
 
 static bool parseCommandElement(char *commandLine, char *commandElement) {
