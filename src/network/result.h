@@ -1,5 +1,5 @@
 #define TYPE_NONE               0
-#define TYPE_FOLAT              1
+#define TYPE_FLOAT              1
 #define TYPE_VECTOR             2
 #define TYPE_METRIX             3
 
@@ -8,6 +8,8 @@
 #define INSTANCE_IS_NULL        2
 #define MATRIX_NOT_MATCH        3
 #define VECTOR_NOT_MATCH        4
+#define LOSSFUNC_NO_CONFIG      5
+#define GRADFUNC_NO_CONFIG      6
 
 typedef struct Result Result;
 
@@ -17,7 +19,7 @@ struct Result {
 
     int type;
 
-    String *message;
+    char *message;
 
     Object *data;
 
@@ -30,10 +32,10 @@ struct Result {
     float (*getValue)(Result *this);
 };
 
-Result* createResultWithData(int code, String *message, int type, Object *data);
+Result* createResultWithData(int code, char *message, int type, Object *data);
 
-Result* createResultWithValue(int code, String *message, float value);
+Result* createResultWithValue(int code, char *message, float value);
 
-Result* createResultWithoutData(int code, String *message);
+Result* createResultWithoutData(int code, char *message);
 
 void releaseResult(Result* this);

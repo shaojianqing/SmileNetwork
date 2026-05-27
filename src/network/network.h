@@ -11,6 +11,8 @@ struct NetworkConfig {
     LayerConfig **hiddenLayerConfigList;
 
     int hiddenLayerConfigCount;
+
+    float learnRateConfigValue;
 };
 
 struct NeuralNetwork {
@@ -22,6 +24,8 @@ struct NeuralNetwork {
     HiddenLayer **hiddenLayerList;
 
     int hiddenLayerCount;
+
+    float learnRateValue;
 
     Result* (*train)(NeuralNetwork *this, TrainData **tainDataList, int trainDataCount);
 

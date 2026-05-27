@@ -2,17 +2,22 @@
 #include <stdlib.h>
 
 #include "../common/common.h"
-#include "../datatype/stringtype.h"
+#include "../random/random.h"
 
-#include "bias.h"
 #include "result.h"
+#include "bias.h"
 #include "vector.h"
+#include "matrix.h"
 
 static Result* add(Vector *this, Vector *vector);
 
 static Result* mul(Vector *this, Vector *vector);
 
 static Result* addBias(Vector *this, Bias *bias);
+
+static Result* copy(Vector *this, Vector *target);
+
+static Result* matrixMul(Vector *this, Vector *target);
 
 static float getValue(Vector *this, int index);
 
@@ -26,6 +31,9 @@ Vector *createVector(int count) {
 
         vector->add = add;
         vector->mul = mul;
+        vector->addBias = addBias;
+
+        vector->copy = copy;
         vector->getValue = getValue;
         vector->setValue = setValue;
     }
@@ -34,12 +42,12 @@ Vector *createVector(int count) {
 
 static Result* add(Vector *this, Vector *vector) {
     if (this == NULL || vector == NULL) {
-        String *message = createString("vector instance is null for addition operation^o^");
+        char *message = "vector instance is null for addition operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
     if (this->count != vector->count) {
-        String *message = createString("vector does not match for addition operation^o^");
+        char *message = "vector does not match for addition operation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
@@ -56,12 +64,12 @@ static Result* add(Vector *this, Vector *vector) {
 
 static Result* mul(Vector *this, Vector *vector) {
     if (this == NULL || vector == NULL) {
-        String *message = createString("vector instance is null for multiplication operation^o^");
+        char *message = "vector instance is null for multiplication operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
     if (this->count != vector->count) {
-        String *message = createString("vector does not match for multiplication operation^o^");
+        char *message = "vector does not match for multiplication operation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
@@ -75,14 +83,39 @@ static Result* mul(Vector *this, Vector *vector) {
     return createResultWithValue(SUCCESS, NULL, sum);
 }
 
+static Result* matrixMul(Vector *this, Vector *target) {
+    if (this == NULL || target == NULL) {
+        char *message = "vector instance is null for matrix multiplication operation^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
+    }
+
+    Matrix *resultMatrix = createMatrix(this->count, target->count, NULL);
+    if (resultMatrix == NULL) {
+        char *message = "can not create matrix instance for memory allocation error^o^";
+        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+    }
+
+    int i = 0, j = 0;
+    for (i=0;i<this->count;++i) {
+        for (j=0;j<target->count;++j) {
+            float thisValue = this->getValue(this, i);
+            float targetValue = target->getValue(target, j);
+            float resultValue = thisValue*targetValue;
+            resultMatrix->setValue(resultMatrix, i, j, resultValue);
+        }
+    }
+
+    return createResultWithData(SUCCESS, NULL, TYPE_METRIX, resultMatrix);
+}
+
 static Result* addBias(Vector *this, Bias *bias) {
     if (this == NULL || bias == NULL) {
-        String *message = createString("vector or bias instance is null for multiplication operation^o^");
+        char *message = "vector or bias instance is null for multiplication operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
     if (this->count != bias->count) {
-        String *message = createString("vector or bias does not match for multiplication operation^o^");
+        char *message = "vector and bias does not match for multiplication operation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
@@ -93,6 +126,27 @@ static Result* addBias(Vector *this, Bias *bias) {
 
         float totalValue = thisValue + biasValue;
         this->setValue(this, i, totalValue);
+    }
+    return createResultWithoutData(SUCCESS, NULL);
+}
+
+static Result* copy(Vector *this, Vector *target) {
+    if (this == NULL || target == NULL) {
+        char *message = "vector instance is null for multiplication operation^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
+    }
+
+    if (this->count != target->count) {
+        char *message = "vector does not match for multiplication operation^o^";
+        return createResultWithoutData(VECTOR_NOT_MATCH, message);
+    }
+
+    int i = 0;
+    for (i=0;i<this->count;++i) {
+        float thisValue = this->getValue(this, i);
+        float targetValue = target->getValue(target, i);
+
+        this->setValue(this, i, targetValue);
     }
     return createResultWithoutData(SUCCESS, NULL);
 }

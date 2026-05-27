@@ -1,11 +1,16 @@
+typedef enum ActivatorLossKind ActivatorLossKind;
 
-typedef enum LossKind LossKind;
-
-enum LossKind {
-    MSE = 1,
-    CEL = 2
+enum ActivatorLossKind {
+    EQUAL_MSE = 1,
+    SOFTMAX_CEL = 2
 };
 
-typedef float (*Loss)(Vector *source, Vector *target);
+typedef Result* (*ActivatorLossFunc)(Vector *predict, Vector *expect);
 
-Loss getLoss(LossKind kind);
+typedef Result* (*ActivatorGradientFunc)(Vector *predict, Vector *expect);
+
+ActivatorLossFunc getActivatorLossFunc(ActivatorLossKind kind);
+
+ActivatorGradientFunc getActivatorGradientFunc(ActivatorLossKind kind);
+
+Activator* getActivatorByActivatorLossKind(ActivatorLossKind kind);

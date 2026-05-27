@@ -1,10 +1,13 @@
+typedef struct Vector Vector;
+
 typedef struct Activator Activator;
 
 typedef enum ActivatorKind ActivatorKind;
 
 enum ActivatorKind {
-    SIGMONID = 1,
+    SIGMOID = 1,
     SOFTMAX = 2,
+    EQUAL = 3,
     RELU = 3
 };
 

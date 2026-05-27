@@ -3,7 +3,6 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
-#include "../datatype/stringtype.h"
 
 #include "result.h"
 
@@ -13,11 +12,12 @@ static Object* getData(Result *this);
 
 static float getValue(Result *this);
 
-static Result* createResultInner(int code, String *message, int type, Object *data, float value) {
+static Result* createResultInner(int code, char *message, int type, Object *data, float value) {
     Result* result = (Result*)malloc(sizeof(Result));
     if (result != NULL) {
         result->success = success;
         result->getData = getData;
+        result->getValue = getValue;
 
         result->code = code;
         result->message = message;
@@ -28,21 +28,20 @@ static Result* createResultInner(int code, String *message, int type, Object *da
     return result;
 }
 
-Result* createResultWithData(int code, String *message, int type, Object *data) {
+Result* createResultWithData(int code, char *message, int type, Object *data) {
     return createResultInner(code, message, type, data, 0.0);
 }
 
-Result* createResultWithValue(int code, String *message, float value) {
-    return createResultInner(code, message, TYPE_FOLAT, NULL, value);
+Result* createResultWithValue(int code, char *message, float value) {
+    return createResultInner(code, message, TYPE_FLOAT, NULL, value);
 }
 
-Result* createResultWithoutData(int code, String *message) {
+Result* createResultWithoutData(int code, char *message) {
     return createResultInner(code, message, TYPE_NONE, NULL, 0.0);
 }
 
 void releaseResult(Result* this) {
     if (this != NULL) {
-        free(this->message);
         free(this);
     }
 }

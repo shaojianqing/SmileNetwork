@@ -11,6 +11,8 @@ typedef struct HiddenLayer HiddenLayer;
 
 struct LayerConfig {
 
+    bool isOutputLayer;
+
     int matrixRowCount;
 
     int matrixColumnCount;
@@ -18,54 +20,60 @@ struct LayerConfig {
     int biasDimensionCount;
 
     ActivatorKind activatorKind;
+
+    ActivatorLossKind activatorLossKind;
 };
 
 struct BaseLayer {
 
-    Bias *bias;
+    Bias *modelBias;
 
-    Matrix *matrix;
+    Matrix *modelMatrix;
 
     Activator *activator;
+
+    Bias *gradientBias;
+
+    Matrix *gradientMatrix;
+
+    BaseLayer *prevLayer;
+
+    BaseLayer *nextLayer;
+
+    Vector *inputVector;
+
+    Vector *resultVector;
+
+    Result* (*foreward)(BaseLayer *this, Vector *vector);
+
+    Result* (*backward)(BaseLayer *this, Vector *target);
+
+    Result* (*optimize)(BaseLayer *this, float learnRate);
 };
 
 struct InputLayer {
 
     BaseLayer baseLayer;
 
-    HiddenLayer *nextLayer;
-
     Result* (*input)(InputLayer *this, Vector *vector);
-    
-    Result* (*backward)(InputLayer *this, Vector *vector);
 };
 
 struct OutputLayer {
 
     BaseLayer baseLayer;
 
-    HiddenLayer *prevLayer;
+    ActivatorLossFunc activatorLossFunc;
+
+    ActivatorGradientFunc activatorGradientFunc;
+
+    Result* (*loss)(OutputLayer *this, Vector *expect);
 
     Result* (*output)(OutputLayer *this);
-
-    Result* (*foreward)(OutputLayer *this, Vector *vector);
 };
 
 struct HiddenLayer {
 
     BaseLayer baseLayer;
-
-    InputLayer *inputLayer;
-
-    OutputLayer *outputLayer;
-
-    HiddenLayer *prevLayer;
-
-    HiddenLayer *nextLayer;
-
-    Result* (*foreward)(BaseLayer *this, Vector *vector);
-
-    Result* (*backward)(BaseLayer *this, Vector *vector);
 };
 
 InputLayer *buildInputLayer(LayerConfig *config);

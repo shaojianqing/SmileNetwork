@@ -13,6 +13,10 @@ struct Vector {
 
     Result* (*addBias)(Vector *this, Bias *bias);
 
+    Result* (*copy)(Vector *this, Vector *target);
+
+    Result* (*matrixMul)(Vector *this, Vector *target);
+
     float (*getValue)(Vector *this, int index);
 
     void (*setValue)(Vector *this, int index, float value);
