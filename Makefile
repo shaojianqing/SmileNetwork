@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/random.o tgt/printer.o tgt/file.o tgt/mnist.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/random.o tgt/printer.o tgt/file.o tgt/mnist.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
 
 .PHONY : build clean
 
@@ -21,6 +21,9 @@ build : clean $(TARGET)
 
 clean :
 	 rm -rf $(TARGET) $(TGT)
+
+tgt/memory.o : src/memory/memory.c src/memory/memory.h
+	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/stringtype.o : src/datatype/stringtype.c src/datatype/stringtype.h
 	$(CC) $(CCFLAGES) $< -o $@

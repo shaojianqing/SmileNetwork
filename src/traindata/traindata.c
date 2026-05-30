@@ -1,7 +1,7 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../memory/memory.h"
 #include "../random/random.h"
 #include "../result/result.h"
 #include "../datatype/stringtype.h"
@@ -11,26 +11,12 @@
 
 #include "traindata.h"
 
-static void retain(TrainData *this);
-
-static void release(TrainData *this);
-
 TrainData *createTrainData(Vector *data, Label *label) {
-    TrainData *trainData = (TrainData*)malloc(sizeof(TrainData));
+    TrainData *trainData = (TrainData*)allocate(sizeof(TrainData));
     if (trainData != NULL) {
         trainData->data = data;
         trainData->label = label;
 
-        trainData->retain = retain;
-        trainData->release = release;
     }
     return trainData;
-}
-
-static void retain(TrainData *this) {
-    
-}
-
-static void release(TrainData *this) {
-
 }

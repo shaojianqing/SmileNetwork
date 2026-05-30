@@ -1,12 +1,16 @@
 typedef struct Logger Logger;
 
+typedef void (*LogFunc)(const char *format, ...);
+
 struct Logger {
 
-    void (*info)(const char *format, ...);
+    LogFunc debug;
 
-    void (*warn)(const char *format, ...);
+    LogFunc info;
 
-    void (*error)(const char *format, ...);
+    LogFunc warn;
+
+    LogFunc error;
 };
 
 void initLoggerConfig();

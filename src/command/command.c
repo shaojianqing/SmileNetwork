@@ -4,6 +4,7 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
+#include "../memory/memory.h"
 #include "../datatype/datatype.h"
 #include "../datatype/stringtype.h"
 #include "../datatype/hashmap.h"
@@ -33,6 +34,7 @@
 #define START_TRAIN_NAME                "startTrain"
 #define PREDICT_NAME                    "predict"
 #define SHOW_HELP_NAME                  "showHelp"
+#define PRINT_MEM_NAME                  "printMemTable"
 #define QUIT_NAME                       "quit"
 
 #define LOAD_CONFIG_DESC                "loadConfig"
@@ -44,6 +46,7 @@
 #define START_TRAIN_DESC                "startTrain"
 #define PREDICT_DESC                    "predict"
 #define SHOW_HELP_DESC                  "showHelp"
+#define PRINT_MEM_DESC                  "printMemTable"
 #define QUIT_DESC                       "quit"
 
 typedef struct Configuration Configuration;
@@ -64,8 +67,6 @@ struct Configuration {
 static char *commandBuffer;
 
 static HashMap *commandConfigMap;
-
-static void release(Command *this);
 
 static bool isCommandBlank(char *commandLine);
 
@@ -137,6 +138,12 @@ void initCommandConfig() {
                                                               false, showHelpExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, showHelpName, showHelpConfiguration);
 
+    String *printMemName = createString(PRINT_MEM_NAME);
+    String *printMemDesc = createString(PRINT_MEM_DESC);
+    Configuration *printMemConfiguration = buildConfiguration(printMemName, printMemDesc, 
+                                                              false, printMemExecutor, defaultRequireConfirm);
+    commandConfigMap->put(commandConfigMap, printMemName, printMemConfiguration);
+
     String *quitName = createString(QUIT_NAME);
     String *quitDesc = createString(QUIT_DESC);
     Configuration *quitConfiguration = buildConfiguration(quitName, quitDesc, false, quitExecutor, quitRequireConfirm);
@@ -148,19 +155,19 @@ Command* parseCommand(char *commandLine) {
         return NULL;
     }
 
-    char *commandName = (char *)malloc(COMMAND_NAME_BUFFER_SIZE);
+    char *commandName = (char *)allocate(COMMAND_NAME_BUFFER_SIZE);
     bool success = parseCommandElement(commandLine, commandName);
     if (!success) {
         printMessage(RED, "Command name is illegal or invalid^o^");
         return NULL;
     }
     String *name = createString(commandName);
-    free(commandName);
+    release(commandName);
 
     if (commandConfigMap->containsKey(commandConfigMap, name)) {
         Configuration *configuration = commandConfigMap->get(commandConfigMap, name);
         if (configuration->requireParameter) {
-            char *commandParam = (char *)malloc(COMMAND_PARAM_BUFFER_SIZE);
+            char *commandParam = (char *)allocate(COMMAND_PARAM_BUFFER_SIZE);
             bool success = parseCommandElement(commandLine, commandParam);
             if (!success) {
                 printMessage(RED, "Command parameter is blank[%s]^o^", name->getValue(name));
@@ -168,7 +175,7 @@ Command* parseCommand(char *commandLine) {
             }
             
             String *parameter = createString(commandParam);
-            free(commandParam);
+            release(commandParam);
 
             return buildCommand(name, parameter, configuration->executor, configuration->requireConfirm);
         }
@@ -191,7 +198,7 @@ static int parseConfirmState(char *commandLine) {
 
 static Configuration* buildConfiguration(String *name, String *description, 
                                          bool requireParameter, Executor executor, RequireConfirm requireConfirm) {
-    Configuration *configuration = (Configuration *)malloc(sizeof(Configuration));
+    Configuration *configuration = (Configuration *)allocate(sizeof(Configuration));
     if (configuration != NULL) {
         configuration->name = name;
         configuration->description = description;
@@ -203,7 +210,7 @@ static Configuration* buildConfiguration(String *name, String *description,
 }
 
 static Command *buildCommand(String *name, String *parameter, Executor executor, RequireConfirm requireConfirm) {
-    Command *command = (Command *)malloc(sizeof(Command));
+    Command *command = (Command *)allocate(sizeof(Command));
     if (command != NULL) {
         command->name = name;
         command->parameter = parameter;
@@ -220,7 +227,7 @@ static void releaseCommand(Command *command) {
         releaseString(command->name);
         releaseString(command->parameter);
 
-        free(command);
+        release(command);
     }
 }
 
@@ -228,7 +235,7 @@ void runCommandEvent() {
 
     Command *currentCommand = NULL;
     bool commandRequireConfirm = false;
-    commandBuffer = (char *)malloc(COMMAND_BUFFER_SIZE);
+    commandBuffer = (char *)allocate(COMMAND_BUFFER_SIZE);
     while(true) {
         if (!commandRequireConfirm) {
             printMessage(GREEN, "Please enter command here^+^");

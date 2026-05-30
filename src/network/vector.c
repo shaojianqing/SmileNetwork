@@ -1,7 +1,7 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../memory/memory.h"
 #include "../random/random.h"
 #include "../result/result.h"
 
@@ -24,9 +24,9 @@ static float getValue(Vector *this, int index);
 static void setValue(Vector *this, int index, float value);
 
 Vector *createVector(int count) {
-    Vector *vector = (Vector*)malloc(sizeof(Vector));
+    Vector *vector = (Vector*)allocate(sizeof(Vector));
     if (vector != NULL) {
-        vector->elements = (float *)malloc(sizeof(float)*count);
+        vector->elements = (float *)allocate(sizeof(float)*count);
         vector->count = count;
 
         vector->add = add;

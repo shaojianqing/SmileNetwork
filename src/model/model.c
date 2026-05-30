@@ -1,7 +1,7 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../memory/memory.h"
 
 #include "model.h"
 

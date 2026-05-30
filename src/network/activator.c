@@ -27,8 +27,11 @@ static Vector* reluDerivative(Vector *vector);
 static Vector* equalDerivative(Vector *vector);
 
 static Activator sigmoidActivator;
+
 static Activator softmaxActivator;
+
 static Activator equalActivator;
+
 static Activator reluActivator;
 
 void initActivatorMap() {

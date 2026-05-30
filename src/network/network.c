@@ -1,9 +1,9 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../logger/logger.h"
+#include "../memory/memory.h"
 #include "../result/result.h"
 #include "../random/random.h"
 #include "../traindata/traindata.h"
@@ -28,7 +28,7 @@ static Result* train(NeuralNetwork *this, TrainData **tainDataList, int trainDat
 static Result* predict(NeuralNetwork *this, Vector *vector);
 
 bool constructNeuralNetwork(NetworkConfig *config) {
-    NeuralNetwork *network = (NeuralNetwork*)malloc(sizeof(NeuralNetwork));
+    NeuralNetwork *network = (NeuralNetwork*)allocate(sizeof(NeuralNetwork));
     if (network != NULL) {
         network->train = train;
         network->predict = predict;
@@ -38,7 +38,7 @@ bool constructNeuralNetwork(NetworkConfig *config) {
 
         if (config->hiddenLayerConfigCount > 0) {
             int hiddenLayerCount = config->hiddenLayerConfigCount;
-            network->hiddenLayerList = (HiddenLayer **)malloc(hiddenLayerCount * sizeof(HiddenLayer*));
+            network->hiddenLayerList = (HiddenLayer **)allocate(hiddenLayerCount * sizeof(HiddenLayer*));
 
             int i = 0;
             for (i = 0;i<hiddenLayerCount;++i) {

@@ -5,6 +5,7 @@
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../random/random.h"
+#include "../memory/memory.h"
 #include "../datatype/datatype.h"
 #include "../result/result.h"
 #include "../printer/printer.h"
@@ -94,6 +95,10 @@ void predictExecutor(Command *command) {
 
 void showHelpExecutor(Command *command) {
     showCommandInfo();
+}
+
+void printMemExecutor(Command *command) {
+    printAllocationTable();
 }
 
 void quitExecutor(Command *command) {

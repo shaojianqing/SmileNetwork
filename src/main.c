@@ -2,6 +2,7 @@
 
 #include "common/common.h"
 #include "common/constant.h"
+#include "memory/memory.h"
 #include "datatype/datatype.h"
 #include "datatype/stringtype.h"
 #include "logger/logger.h"
@@ -16,6 +17,7 @@
 
 int main(int argc, char **argv) {
 
+    initMemoryConfig();
     initRandomSeed();
     initActivatorMap();
     initLoggerConfig();

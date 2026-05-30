@@ -1,8 +1,8 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
 #include "../common/constant.h"
+#include "../memory/memory.h"
 #include "../random/random.h"
 #include "../logger/logger.h"
 #include "../result/result.h"
@@ -38,7 +38,7 @@ static Result* forewardOutput(BaseLayer *this, Vector *vector);
 static Result* optimizeInner(BaseLayer *this, float learnRate);
 
 InputLayer *buildInputLayer(LayerConfig config) {
-    InputLayer *inputLayer = (InputLayer*)malloc(sizeof(InputLayer));
+    InputLayer *inputLayer = (InputLayer*)allocate(sizeof(InputLayer));
     if (inputLayer != NULL) {
         inputLayer->input = input;
 
@@ -55,7 +55,7 @@ InputLayer *buildInputLayer(LayerConfig config) {
 }
 
 OutputLayer *buildOutputLayer(LayerConfig config) {
-    OutputLayer *outputLayer = (OutputLayer*)malloc(sizeof(OutputLayer));
+    OutputLayer *outputLayer = (OutputLayer*)allocate(sizeof(OutputLayer));
     if (outputLayer != NULL) {
         outputLayer->output = output;
         outputLayer->loss = loss;
@@ -103,7 +103,7 @@ OutputLayer *buildOutputLayer(LayerConfig config) {
 }
 
 HiddenLayer *buildHiddenLayer(LayerConfig config) {
-    HiddenLayer *hiddenLayer = (HiddenLayer*)malloc(sizeof(HiddenLayer));
+    HiddenLayer *hiddenLayer = (HiddenLayer*)allocate(sizeof(HiddenLayer));
     if (hiddenLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
         baseLayer->foreward = forewardInner;
@@ -149,7 +149,7 @@ void releaseInputLayer(InputLayer *inputLayer) {
     if (inputLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)inputLayer;
         releaseBaselayer(baseLayer);
-        free(inputLayer);
+        release(inputLayer);
     }
 }
 
@@ -157,7 +157,7 @@ void releaseOutputLayer(OutputLayer *outputLayer) {
     if (outputLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)outputLayer;
         releaseBaselayer(baseLayer);
-        free(outputLayer);
+        release(outputLayer);
     }
 }
 
@@ -165,7 +165,7 @@ void releaseHiddenLayer(HiddenLayer *hiddenLayer) {
     if (hiddenLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
         releaseBaselayer(baseLayer);
-        free(hiddenLayer);
+        release(hiddenLayer);
     }
 }
 

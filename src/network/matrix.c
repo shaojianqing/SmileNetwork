@@ -1,7 +1,7 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../memory/memory.h"
 #include "../random/random.h"
 #include "../result/result.h"
 
@@ -28,7 +28,7 @@ static float getElementValue(Matrix *this, int row, int column);
 static void setElementValue(Matrix *this, int row, int column, float data);
 
 Matrix* createMatrix(int rowCount, int columnCount, Random random) {
-    Matrix *matrix = (Matrix*)malloc(sizeof(Matrix));
+    Matrix *matrix = (Matrix*)allocate(sizeof(Matrix));
     if (matrix != NULL) {
         matrix->mulVector = mulVector;
         matrix->addMatrix = addMatrix;
@@ -37,7 +37,7 @@ Matrix* createMatrix(int rowCount, int columnCount, Random random) {
         matrix->transpose = transpose;
         matrix->setValue = setElementValue;
 
-        matrix->data = (float*)malloc(sizeof(float)*rowCount*columnCount);
+        matrix->data = (float*)allocate(sizeof(float)*rowCount*columnCount);
 
         if (random != NULL) {
             int i = 0, totalCount = rowCount*columnCount;
@@ -51,8 +51,8 @@ Matrix* createMatrix(int rowCount, int columnCount, Random random) {
 
 void releaseMatrix(Matrix *matrix) {
     if (matrix != NULL) {
-        free(matrix->data);
-        free(matrix);
+        release(matrix->data);
+        release(matrix);
     }
 }
 

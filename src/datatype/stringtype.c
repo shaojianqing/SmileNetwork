@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <string.h>
+#include <stdarg.h>
 
 #include "../common/common.h"
 #include "../common/constant.h"
@@ -9,6 +10,7 @@
 #include "stringtype.h"
 
 #define DEFALUT_STRING_SPACE		16
+#define DEFAULT_BUFFER_SIZE     	2048
 
 static void bindFunction(String *this);
 
@@ -20,7 +22,7 @@ static String* subString(String *this, int start, int end);
 
 static String* catString(String *this, String *string); 
 
-String *createString(char *value) {
+String* createString(char *value) {
 	if (value == NULL) {
 		return NULL;
 	}
@@ -42,6 +44,16 @@ String *createString(char *value) {
 	string->value[length] = '\0';
 
 	return string;
+}
+
+String* createStringWithFormat(const char *format, ...) {
+	char buffer[DEFAULT_BUFFER_SIZE];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
+
+	return createString(buffer);
 }
 
 void releaseString(String* string) {

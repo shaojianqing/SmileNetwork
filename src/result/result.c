@@ -1,7 +1,7 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../memory/memory.h"
 #include "../common/constant.h"
 
 #include "result.h"
@@ -13,7 +13,7 @@ static Object* getData(Result *this);
 static float getValue(Result *this);
 
 static Result* createResultInner(int code, char *message, int type, Object *data, float value) {
-    Result* result = (Result*)malloc(sizeof(Result));
+    Result* result = (Result*)allocate(sizeof(Result));
     if (result != NULL) {
         result->success = success;
         result->getData = getData;
@@ -42,7 +42,7 @@ Result* createResultWithoutData(int code, char *message) {
 
 void releaseResult(Result* this) {
     if (this != NULL) {
-        free(this);
+        release(this);
     }
 }
 

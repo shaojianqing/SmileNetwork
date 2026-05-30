@@ -6,6 +6,9 @@
 #include <ctype.h>
 #include <float.h>
 
+#include "../common/common.h"
+#include "../memory/memory.h"
+
 #include "json.h"
 
 /* define our own boolean type */
@@ -105,7 +108,7 @@ static unsigned char* Jsonstrdup(const unsigned char* string) {
     }
 
     length = strlen((const char*)string) + sizeof("");
-    copy = (unsigned char*)malloc(length);
+    copy = (unsigned char*)allocate(length);
     if (copy == NULL) {
         return NULL;
     }
@@ -115,7 +118,7 @@ static unsigned char* Jsonstrdup(const unsigned char* string) {
 
 /* Internal constructor. */
 static Json *newJsonItem() {
-    Json* node = (Json*)malloc(sizeof(Json));
+    Json* node = (Json*)allocate(sizeof(Json));
     if (node) {
         memset(node, '\0', sizeof(Json));
     }
@@ -132,14 +135,14 @@ void deleteJson(Json *item) {
             deleteJson(item->child);
         }
         if (!(item->type & IsJsonReference) && (item->valueString != NULL)) {
-            free(item->valueString);
+            release(item->valueString);
             item->valueString = NULL;
         }
         if (!(item->type & IsJsonStringConst) && (item->string != NULL)) {
-            free(item->string);
+            release(item->string);
             item->string = NULL;
         }
-        free(item);
+        release(item);
         item = next;
     }
 }
@@ -211,7 +214,7 @@ static JsonBool parseNumber(Json *item, ParseBuffer *inputBuffer) {
     }
 loopEnd:
     /* malloc for temporary buffer, add 1 for '\0' */
-    numberCString = (unsigned char *)malloc(numberStringLength + 1);
+    numberCString = (unsigned char *)allocate(numberStringLength + 1);
     if (numberCString == NULL) {
         return false; /* allocation failure */
     }
@@ -231,7 +234,7 @@ loopEnd:
     number = strtod((const char*)numberCString, (char**)&afterEnd);
     if (numberCString == afterEnd) {
         /* free the temporary buffer */
-        free(numberCString);
+        release(numberCString);
         return false; /* parseError */
     }
 
@@ -250,7 +253,7 @@ loopEnd:
 
     inputBuffer->offset += (size_t)(afterEnd - numberCString);
     /* free the temporary buffer */
-    free(numberCString);
+    release(numberCString);
     return true;
 }
 
@@ -301,7 +304,7 @@ char* setJsonValueString(Json *object, const char *valueString) {
         return NULL;
     }
     if (object->valueString != NULL) {
-        free(object->valueString);
+        release(object->valueString);
         object->valueString = NULL;
     }
     object->valueString = copy;
@@ -360,7 +363,7 @@ static unsigned char* ensure(PrintBuffer *p, size_t needed) {
 
     newbuffer = (unsigned char*)realloc(p->buffer, newsize);
     if (newbuffer == NULL) {
-        free(p->buffer);
+        release(p->buffer);
         p->length = 0;
         p->buffer = NULL;
 
@@ -605,7 +608,7 @@ static JsonBool parseString(Json *item, ParseBuffer *inputBuffer) {
 
         /* This is at most how much we need for the output */
         allocationLength = (size_t) (inputEnd - bufferAtOffset(inputBuffer)) - skippedBytes;
-        output = (unsigned char*)malloc(allocationLength + sizeof(""));
+        output = (unsigned char*)allocate(allocationLength + sizeof(""));
         if (output == NULL) {
             goto fail; /* allocation failure */
         }
@@ -674,7 +677,7 @@ static JsonBool parseString(Json *item, ParseBuffer *inputBuffer) {
 
 fail:
     if (output != NULL) {
-        free(output);
+        release(output);
         output = NULL;
     }
 
@@ -937,7 +940,7 @@ static unsigned char *print(const Json* item, JsonBool format) {
     memset(buffer, 0, sizeof(buffer));
 
     /* create buffer */
-    buffer->buffer = (unsigned char*) malloc(defaultBufferSize);
+    buffer->buffer = (unsigned char*)allocate(defaultBufferSize);
     buffer->length = defaultBufferSize;
     buffer->format = format;
     if (buffer->buffer == NULL) {
@@ -958,12 +961,12 @@ static unsigned char *print(const Json* item, JsonBool format) {
 
 fail:
     if (buffer->buffer != NULL) {
-        free(buffer->buffer);
+        release(buffer->buffer);
         buffer->buffer = NULL;
     }
 
     if (printed != NULL) {
-        free(printed);
+        release(printed);
         printed = NULL;
     }
 
@@ -986,7 +989,7 @@ char* printJsonBuffered(const Json *item, int prebuffer, JsonBool fmt) {
         return NULL;
     }
 
-    p.buffer = (unsigned char*)malloc((size_t)prebuffer);
+    p.buffer = (unsigned char*)allocate((size_t)prebuffer);
     if (!p.buffer) {
         return NULL;
     }
@@ -997,7 +1000,7 @@ char* printJsonBuffered(const Json *item, int prebuffer, JsonBool fmt) {
     p.format = fmt;
 
     if (!printValue(item, &p)) {
-        free(p.buffer);
+        release(p.buffer);
         p.buffer = NULL;
         return NULL;
     }
@@ -1639,7 +1642,7 @@ static JsonBool addItemToObject(Json *object, const char *string, Json *item, co
     }
 
     if (!(item->type & IsJsonStringConst) && (item->string != NULL)) {
-        free(item->string);
+        release(item->string);
     }
 
     item->string = newKey;
@@ -1901,7 +1904,7 @@ static JsonBool replaceItemInObject(Json *object, const char *string, Json *repl
 
     /* replace the name in the replacement */
     if (!(replacement->type & IsJsonStringConst) && (replacement->string != NULL)) {
-        free(replacement->string);
+        release(replacement->string);
         replacement->string = NULL;
     }
     replacement->string = (char*)Jsonstrdup((const unsigned char*)string);

@@ -1,8 +1,8 @@
-#include <memory.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
 #include "../result/result.h"
+#include "../memory/memory.h"
 #include "../random/random.h"
 
 #include "bias.h"
@@ -19,9 +19,9 @@ static Result* subBias(Bias *this, Bias *bias);
 static Result* mulNumber(Bias *this, float number);
 
 Bias *createBias(int dimensionCount, Random random) {
-    Bias *bias = (Bias*)malloc(sizeof(Bias));
+    Bias *bias = (Bias*)allocate(sizeof(Bias));
     if (bias != NULL) {
-        bias->elements = (float *)malloc(sizeof(float)*dimensionCount);
+        bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
         bias->count = dimensionCount;
 
         bias->getValue = getValue;
@@ -42,8 +42,8 @@ Bias *createBias(int dimensionCount, Random random) {
 
 void releaseBias(Bias *this) {
     if (this != NULL) {
-        free(this->elements);
-        free(this);
+        release(this->elements);
+        release(this);
     }
 }
 

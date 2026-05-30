@@ -17,6 +17,8 @@ struct String {
 
 String* createString(char *value);
 
+String* createStringWithFormat(const char *format, ...);
+
 void releaseString(String* string);
 
 int StringHashCode(Object *string);
