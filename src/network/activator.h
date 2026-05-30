@@ -8,7 +8,7 @@ enum ActivatorKind {
     SIGMOID = 1,
     SOFTMAX = 2,
     EQUAL = 3,
-    RELU = 3
+    RELU = 4
 };
 
 struct Activator {

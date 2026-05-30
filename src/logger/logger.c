@@ -30,7 +30,7 @@ static void info(const char *format, ...) {
     char buffer[LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, format);
-    sprintf(buffer, format, args);
+    vsprintf(buffer, format, args);
     va_end(args);
 
     log(INFO, buffer);
@@ -40,7 +40,7 @@ static void warn(const char *format, ...) {
     char buffer[LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, format);
-    sprintf(buffer, format, args);
+    vsprintf(buffer, format, args);
     va_end(args);
 
     log(WARN, buffer);
@@ -50,7 +50,7 @@ static void error(const char *format, ...) {
     char buffer[LOG_BUFFER_SIZE];
     va_list args;
     va_start(args, format);
-    sprintf(buffer, format, args);
+    vsprintf(buffer, format, args);
     va_end(args);
 
     log(ERROR, buffer);

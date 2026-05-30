@@ -1,14 +1,26 @@
+typedef struct Vector Vector;
+
+typedef struct TrainData TrainData;
+
+typedef struct LayerConfig LayerConfig;
+
+typedef struct InputLayer InputLayer;
+
+typedef struct OutputLayer OutputLayer;
+
+typedef struct HiddenLayer HiddenLayer;
+
 typedef struct NetworkConfig NetworkConfig;
 
 typedef struct NeuralNetwork NeuralNetwork;
 
 struct NetworkConfig {
 
-    LayerConfig *inputLayerConfig;
+    LayerConfig inputLayerConfig;
 
-    LayerConfig *outputLayerConfig;
+    LayerConfig outputLayerConfig;
 
-    LayerConfig **hiddenLayerConfigList;
+    LayerConfig *hiddenLayerConfigList;
 
     int hiddenLayerConfigCount;
 
@@ -16,6 +28,8 @@ struct NetworkConfig {
 };
 
 struct NeuralNetwork {
+
+    float learnRateValue;
 
     InputLayer *inputLayer;
 
@@ -25,14 +39,13 @@ struct NeuralNetwork {
 
     int hiddenLayerCount;
 
-    float learnRateValue;
-
     Result* (*train)(NeuralNetwork *this, TrainData **tainDataList, int trainDataCount);
 
     Result* (*predict)(NeuralNetwork *this, Vector *vector);
 };
 
-NeuralNetwork* buildNeuralNetwork(NetworkConfig *config);
+bool constructNeuralNetwork(NetworkConfig *config);
+
+void releaseNeuralNetwork(NeuralNetwork *network);
 
 NeuralNetwork* getNeuralNetwork();
-

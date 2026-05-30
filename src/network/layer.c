@@ -5,10 +5,10 @@
 #include "../common/constant.h"
 #include "../random/random.h"
 #include "../logger/logger.h"
+#include "../result/result.h"
 #include "../datatype/stringtype.h"
 
 #include "activator.h"
-#include "result.h"
 #include "bias.h"
 #include "vector.h"
 #include "matrix.h"
@@ -19,7 +19,7 @@ extern Logger logger;
 
 static void releaseBaselayer(BaseLayer *baseLayer);
 
-static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config);
+static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig config);
 
 static Result* input(InputLayer *this, Vector *vector);
 
@@ -37,7 +37,7 @@ static Result* forewardOutput(BaseLayer *this, Vector *vector);
 
 static Result* optimizeInner(BaseLayer *this, float learnRate);
 
-InputLayer *buildInputLayer(LayerConfig *config) {
+InputLayer *buildInputLayer(LayerConfig config) {
     InputLayer *inputLayer = (InputLayer*)malloc(sizeof(InputLayer));
     if (inputLayer != NULL) {
         inputLayer->input = input;
@@ -54,7 +54,7 @@ InputLayer *buildInputLayer(LayerConfig *config) {
     return inputLayer;
 }
 
-OutputLayer *buildOutputLayer(LayerConfig *config) {
+OutputLayer *buildOutputLayer(LayerConfig config) {
     OutputLayer *outputLayer = (OutputLayer*)malloc(sizeof(OutputLayer));
     if (outputLayer != NULL) {
         outputLayer->output = output;
@@ -70,8 +70,8 @@ OutputLayer *buildOutputLayer(LayerConfig *config) {
             return NULL;
         }
 
-        if (config->isOutputLayer) {
-            Activator *activator = getActivatorByActivatorLossKind(config->activatorLossKind);
+        if (config.isOutputLayer) {
+            Activator *activator = getActivatorByActivatorLossKind(config.activatorLossKind);
             if (activator != NULL) {
                 baseLayer->activator = activator;
             } else {
@@ -80,7 +80,7 @@ OutputLayer *buildOutputLayer(LayerConfig *config) {
                 return NULL;
             }
 
-            ActivatorLossFunc activatorLossFunc = getActivatorLossFunc(config->activatorLossKind);
+            ActivatorLossFunc activatorLossFunc = getActivatorLossFunc(config.activatorLossKind);
             if (activatorLossFunc != NULL) {
                 outputLayer->activatorLossFunc = activatorLossFunc;
             } else {
@@ -89,7 +89,7 @@ OutputLayer *buildOutputLayer(LayerConfig *config) {
                 return NULL;
             }
 
-            ActivatorGradientFunc activatorGradientFunc = getActivatorGradientFunc(config->activatorLossKind);
+            ActivatorGradientFunc activatorGradientFunc = getActivatorGradientFunc(config.activatorLossKind);
             if (activatorGradientFunc != NULL) {
                 outputLayer->activatorGradientFunc = activatorGradientFunc;
             } else {
@@ -102,7 +102,7 @@ OutputLayer *buildOutputLayer(LayerConfig *config) {
     return outputLayer;
 }
 
-HiddenLayer *buildHiddenLayer(LayerConfig *config) {
+HiddenLayer *buildHiddenLayer(LayerConfig config) {
     HiddenLayer *hiddenLayer = (HiddenLayer*)malloc(sizeof(HiddenLayer));
     if (hiddenLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
@@ -118,8 +118,8 @@ HiddenLayer *buildHiddenLayer(LayerConfig *config) {
     return hiddenLayer;
 }
 
-static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
-    Matrix *modelMatrix = createMatrix(config->matrixRowCount, config->matrixColumnCount, matrixGenerator);
+static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig config) {
+    Matrix *modelMatrix = createMatrix(config.matrixRowCount, config.matrixColumnCount, matrixGenerator);
     if (modelMatrix != NULL) {
         baseLayer->modelMatrix = modelMatrix;
     } else {
@@ -127,7 +127,7 @@ static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
         return false;
     }
 
-    Bias *modelBias = createBias(config->biasDimensionCount, biasGenerator);
+    Bias *modelBias = createBias(config.biasDimensionCount, biasGenerator);
     if (modelBias != NULL) {
         baseLayer->modelBias = modelBias;
     } else {
@@ -135,7 +135,7 @@ static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
         return false;
     }
 
-    Activator *activator = getActivator(config->activatorKind);
+    Activator *activator = getActivator(config.activatorKind);
     if (activator != NULL) {
         baseLayer->activator = activator;
     } else {
@@ -383,33 +383,29 @@ static Result* optimizeInner(BaseLayer *this, float learnRate) {
     Result *result = gradientMatrix->mulNumber(gradientMatrix, learnRate);
     if (!result->success(result)) {
         return result;
-    } else {
-        releaseResult(result);
     }
+    releaseResult(result);
 
     Matrix *modelMatrix = this->modelMatrix;
     result = modelMatrix->subMatrix(modelMatrix, gradientMatrix);
     if (!result->success(result)) {
         return result;
-    } else {
-        releaseResult(result);
     }
+    releaseResult(result);
 
     Bias *gradientBias = this->gradientBias;
     result = gradientBias->mulNumber(gradientBias, learnRate);
     if (!result->success(result)) {
         return result;
-    } else {
-        releaseResult(result);
     }
+    releaseResult(result);
 
     Bias *modelBias = this->modelBias;
     result = modelBias->subBias(modelBias, gradientBias);
     if (!result->success(result)) {
         return result;
-    } else {
-        releaseResult(result);
     }
+    releaseResult(result);
     
     return createResultWithoutData(SUCCESS, NULL);
 }

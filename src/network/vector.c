@@ -3,8 +3,8 @@
 
 #include "../common/common.h"
 #include "../random/random.h"
+#include "../result/result.h"
 
-#include "result.h"
 #include "bias.h"
 #include "vector.h"
 #include "matrix.h"

@@ -2,9 +2,9 @@
 #include <stdlib.h>
 
 #include "../common/common.h"
+#include "../result/result.h"
 #include "../random/random.h"
 
-#include "result.h"
 #include "bias.h"
 #include "vector.h"
 
@@ -104,15 +104,15 @@ static Result* subBias(Bias *this, Bias *bias) {
 }
 
 static Result* mulNumber(Bias *this, float number) {
-    if (this != NULL) {
-        int i = 0;
-        for (i=0;i<this->count;++i) {
-            float value = this->getValue(this, i);
-            float newValue = newValue*number;
-            this->setValue(this, i, newValue);
-        }
-        return createResultWithoutData(SUCCESS, NULL);
+    if (this == NULL) {
+        char *message = "bias instance is null for multiplication operation^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
-    char *message = "bias instance is null for multiplication operation^o^";
-    return createResultWithoutData(INSTANCE_IS_NULL, message);
+    int i = 0;
+    for (i=0;i<this->count;++i) {
+        float value = this->getValue(this, i);
+        float newValue = newValue*number;
+        this->setValue(this, i, newValue);
+    }
+    return createResultWithoutData(SUCCESS, NULL);
 }

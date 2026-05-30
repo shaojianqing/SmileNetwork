@@ -1,7 +1,10 @@
 #define TYPE_NONE               0
 #define TYPE_FLOAT              1
-#define TYPE_VECTOR             2
-#define TYPE_METRIX             3
+#define TYPE_BYTE_BUFFER        2
+#define TYPE_CHAR_BUFFER        3
+#define TYPE_VECTOR             4
+#define TYPE_METRIX             5
+#define TYPE_NETWORK_CONFIG     6
 
 #define SUCCESS                 0
 #define MEMORY_ALLOCATE_ERROR   1
@@ -10,6 +13,9 @@
 #define VECTOR_NOT_MATCH        4
 #define LOSSFUNC_NO_CONFIG      5
 #define GRADFUNC_NO_CONFIG      6
+#define FILE_OPEN_ERROR         7
+#define FILE_READ_ERROR         8
+#define CONFIG_NO_EXIST         9
 
 typedef struct Result Result;
 

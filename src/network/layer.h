@@ -1,4 +1,3 @@
-
 typedef struct LayerConfig LayerConfig;
 
 typedef struct BaseLayer BaseLayer;
@@ -76,11 +75,11 @@ struct HiddenLayer {
     BaseLayer baseLayer;
 };
 
-InputLayer *buildInputLayer(LayerConfig *config);
+InputLayer *buildInputLayer(LayerConfig config);
 
-OutputLayer *buildOutputLayer(LayerConfig *config);
+OutputLayer *buildOutputLayer(LayerConfig config);
 
-HiddenLayer *buildHiddenLayer(LayerConfig *config);
+HiddenLayer *buildHiddenLayer(LayerConfig config);
 
 void releaseInputLayer(InputLayer *inputLayer);
 

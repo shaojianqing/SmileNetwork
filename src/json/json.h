@@ -52,15 +52,15 @@ int getJsonArraySize(const Json *array);
 /* Retrieve item number "index" from array "array". Returns NULL if unsuccessful. */
 Json* getJsonArrayItem(const Json *array, int index);
 /* Get item "string" from object. Case insensitive. */
-Json* getJsonObjectItem(const Json * const object, const char * const string);
-Json* getJsonObjectItemCaseSensitive(const Json * const object, const char * const string);
+Json* getJsonObjectItem(const Json *object, const char *string);
+Json* getJsonObjectItemCaseSensitive(const Json *object, const char *string);
 JsonBool hasJsonObjectItem(const Json *object, const char *string);
 /* For analysing failed parses. This returns a pointer to the parse error. You'll probably need to look a few chars back to make sense of it. Defined when JsonParse() returns 0. 0 when JsonParse() succeeds. */
 const char* getJsonErrorPtr(void);
 
 /* Check item type and return its value */
-char* getJsonStringValue(const Json * const item);
-double getJsonNumberValue(const Json * const item);
+char* getJsonStringValue(const Json *item);
+double getJsonNumberValue(const Json *item);
 
 /* These functions check the type of an item */
 JsonBool isJsonInvalid(const Json *item);
@@ -113,7 +113,7 @@ JsonBool addJsonItemReferenceToArray(Json *array, Json *item);
 JsonBool addJsonItemReferenceToObject(Json *object, const char *string, Json *item);
 
 /* Detach items from Arrays/Objects. */
-Json* detachJsonItemViaPointer(Json *parent, Json * const item);
+Json* detachJsonItemViaPointer(Json *parent, Json *item);
 Json* detachJsonItemFromArray(Json *array, int which);
 Json* detachJsonItemFromObject(Json *object, const char *string);
 Json* detachJsonItemFromObjectCaseSensitive(Json *object, const char *string);
@@ -125,7 +125,7 @@ void deleteJsonItemFromObjectCaseSensitive(Json *object, const char *string);
 
 /* Update array items. */
 JsonBool JsonInsertItemInArray(Json *array, int which, Json *newitem); /* Shifts pre-existing items to the right. */
-JsonBool JsonReplaceItemViaPointer(Json * const parent, Json * const item, Json * replacement);
+JsonBool JsonReplaceItemViaPointer(Json *parent, Json *item, Json * replacement);
 JsonBool JsonReplaceItemInArray(Json *array, int which, Json *newitem);
 JsonBool JsonReplaceItemInObject(Json *object,const char *string,Json *newitem);
 JsonBool JsonReplaceItemInObjectCaseSensitive(Json *object,const char *string,Json *newitem);
@@ -137,7 +137,7 @@ Json* duplicateJson(const Json *item, JsonBool recurse);
  * The item->next and ->prev pointers are always zero on return from Duplicate. */
 /* Recursively compare two Json items for equality. If either a or b is NULL or invalid, they will be considered unequal.
  * case_sensitive determines if object keys are treated case sensitive (1) or case insensitive (0) */
-JsonBool compareJson(const Json * const a, const Json * const b, const JsonBool case_sensitive);
+JsonBool compareJson(const Json *a, const Json *b, const JsonBool case_sensitive);
 
 /* Minify a strings, remove blank characters(such as ' ', '\t', '\r', '\n') from strings.
  * The input pointer json cannot point to a read-only address area, such as a string constant, 
@@ -146,15 +146,15 @@ void minifyJson(char *json);
 
 /* Helper functions for creating and adding items to an object at the same time.
  * They return the added item or NULL on failure. */
-Json* addJsonNullToObject(Json * const object, const char * const name);
-Json* addJsonTrueToObject(Json * const object, const char * const name);
-Json* addJsonFalseToObject(Json * const object, const char * const name);
-Json* addJsonBoolToObject(Json * const object, const char * const name, const JsonBool boolean);
-Json* addJsonNumberToObject(Json * const object, const char * const name, const double number);
-Json* addJsonStringToObject(Json * const object, const char * const name, const char * const string);
-Json* addJsonRawToObject(Json * const object, const char * const name, const char * const raw);
-Json* addJsonObjectToObject(Json * const object, const char * const name);
-Json* addJsonArrayToObject(Json * const object, const char * const name);
+Json* addJsonNullToObject(Json *object, const char *name);
+Json* addJsonTrueToObject(Json *object, const char *name);
+Json* addJsonFalseToObject(Json *object, const char *name);
+Json* addJsonBoolToObject(Json *object, const char *name, const JsonBool boolean);
+Json* addJsonNumberToObject(Json *object, const char *name, const double number);
+Json* addJsonStringToObject(Json *object, const char *name, const char *string);
+Json* addJsonRawToObject(Json *object, const char *name, const char *raw);
+Json* addJsonObjectToObject(Json *object, const char *name);
+Json* addJsonArrayToObject(Json *object, const char *name);
 
 /* When assigning an integer value, it needs to be propagated to valuedouble too. */
 #define setJsonIntValue(object, number) ((object) ? (object)->valueint = (object)->valuedouble = (number) : (number))

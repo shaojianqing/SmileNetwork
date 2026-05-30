@@ -165,7 +165,7 @@ typedef struct {
 #define bufferAtOffset(buffer) ((buffer)->content + (buffer)->offset)
 
 /* Parse the input text to generate a number, and populate the result into item. */
-static JsonBool parseNumber(Json * const item, ParseBuffer * const inputBuffer) {
+static JsonBool parseNumber(Json *item, ParseBuffer *inputBuffer) {
     double number = 0;
     unsigned char *afterEnd = NULL;
     unsigned char *numberCString;
@@ -319,7 +319,7 @@ typedef struct {
 } PrintBuffer;
 
 /* realloc PrintBuffer if necessary to have at least "needed" bytes more */
-static unsigned char* ensure(PrintBuffer * const p, size_t needed) {
+static unsigned char* ensure(PrintBuffer *p, size_t needed) {
     unsigned char *newbuffer = NULL;
     size_t newsize = 0;
 
@@ -374,7 +374,7 @@ static unsigned char* ensure(PrintBuffer * const p, size_t needed) {
 }
 
 /* calculate the new length of the string in a PrintBuffer and update the offset */
-static void updateOffset(PrintBuffer * const buffer) {
+static void updateOffset(PrintBuffer *buffer) {
     const unsigned char *bufferPointer = NULL;
     if ((buffer == NULL) || (buffer->buffer == NULL)) {
         return;
@@ -391,7 +391,7 @@ static JsonBool compareDouble(double a, double b) {
 }
 
 /* Render the number nicely from the given item into a string. */
-static JsonBool printNumber(const Json * const item, PrintBuffer * const outputBuffer) {
+static JsonBool printNumber(const Json *item, PrintBuffer *outputBuffer) {
     unsigned char *outputPointer = NULL;
     double d = item->valueDouble;
     int length = 0;
@@ -448,7 +448,7 @@ static JsonBool printNumber(const Json * const item, PrintBuffer * const outputB
 }
 
 /* parse 4 digit hexadecimal number */
-static unsigned parseHex4(const unsigned char * const input) {
+static unsigned parseHex4(const unsigned char *input) {
     unsigned int h = 0;
     size_t i = 0;
 
@@ -474,7 +474,7 @@ static unsigned parseHex4(const unsigned char * const input) {
 
 /* converts a UTF-16 literal to UTF-8
  * A literal can be one or two sequences of the form \uXXXX */
-static unsigned char utf16LiteralToUtf8(const unsigned char * const inputPointer, const unsigned char * const inputEnd, unsigned char **outputPointer) {
+static unsigned char utf16LiteralToUtf8(const unsigned char *inputPointer, const unsigned char *inputEnd, unsigned char **outputPointer) {
     long unsigned int codepoint = 0;
     unsigned int firstCode = 0;
     const unsigned char *firstSequence = inputPointer;
@@ -572,7 +572,7 @@ fail:
 }
 
 /* Parse the input text into an unescaped cinput, and populate item. */
-static JsonBool parseString(Json * const item, ParseBuffer * const inputBuffer) {
+static JsonBool parseString(Json *item, ParseBuffer *inputBuffer) {
     const unsigned char *inputPointer = bufferAtOffset(inputBuffer) + 1;
     const unsigned char *inputEnd = bufferAtOffset(inputBuffer) + 1;
     unsigned char *outputPointer = NULL;
@@ -686,7 +686,7 @@ fail:
 }
 
 /* Render the cstring provided to an escaped version that can be printed. */
-static JsonBool printStringPtr(const unsigned char * const input, PrintBuffer * const outputBuffer) {
+static JsonBool printStringPtr(const unsigned char *input, PrintBuffer *outputBuffer) {
     const unsigned char *inputPointer = NULL;
     unsigned char *output = NULL;
     unsigned char *outputPointer = NULL;
@@ -794,20 +794,20 @@ static JsonBool printStringPtr(const unsigned char * const input, PrintBuffer * 
 }
 
 /* Invoke printStringPtr (which is useful) on an item. */
-static JsonBool printString(const Json * const item, PrintBuffer * const p) {
+static JsonBool printString(const Json *item, PrintBuffer *p) {
     return printStringPtr((unsigned char*)item->valueString, p);
 }
 
 /* Predeclare these prototypes. */
-static JsonBool parseValue(Json * const item, ParseBuffer * const inputBuffer);
-static JsonBool printValue(const Json * const item, PrintBuffer * const outputBuffer);
-static JsonBool parseArray(Json * const item, ParseBuffer * const inputBuffer);
-static JsonBool printArray(const Json * const item, PrintBuffer * const outputBuffer);
-static JsonBool parseObject(Json * const item, ParseBuffer * const inputBuffer);
-static JsonBool printObject(const Json * const item, PrintBuffer * const outputBuffer);
+static JsonBool parseValue(Json *item, ParseBuffer *inputBuffer);
+static JsonBool printValue(const Json *item, PrintBuffer *outputBuffer);
+static JsonBool parseArray(Json *item, ParseBuffer *inputBuffer);
+static JsonBool printArray(const Json *item, PrintBuffer *outputBuffer);
+static JsonBool parseObject(Json *item, ParseBuffer *inputBuffer);
+static JsonBool printObject(const Json *item, PrintBuffer *outputBuffer);
 
 /* Utility to jump whitespace and cr/lf */
-static ParseBuffer *bufferSkipWhitespace(ParseBuffer * const buffer) {
+static ParseBuffer *bufferSkipWhitespace(ParseBuffer *buffer) {
     if ((buffer == NULL) || (buffer->content == NULL)) {
         return NULL;
     }
@@ -828,7 +828,7 @@ static ParseBuffer *bufferSkipWhitespace(ParseBuffer * const buffer) {
 }
 
 /* skip the UTF-8 BOM (byte order mark) if it is at the beginning of a buffer */
-static ParseBuffer *skipUtf8Bom(ParseBuffer * const buffer) {
+static ParseBuffer *skipUtf8Bom(ParseBuffer *buffer) {
     if ((buffer == NULL) || (buffer->content == NULL) || (buffer->offset != 0)) {
         return NULL;
     }
@@ -1022,7 +1022,7 @@ JsonBool printJsonPreallocated(Json *item, char *buffer, const int length, const
 }
 
 /* Parser core - when encountering text, process appropriately. */
-static JsonBool parseValue(Json * const item, ParseBuffer * const inputBuffer) {
+static JsonBool parseValue(Json *item, ParseBuffer *inputBuffer) {
     if ((inputBuffer == NULL) || (inputBuffer->content == NULL)) {
         return false; /* no input */
     }
@@ -1068,7 +1068,7 @@ static JsonBool parseValue(Json * const item, ParseBuffer * const inputBuffer) {
 }
 
 /* Render a value to text. */
-static JsonBool printValue(const Json * const item, PrintBuffer * const outputBuffer) {
+static JsonBool printValue(const Json *item, PrintBuffer *outputBuffer) {
     unsigned char *output = NULL;
 
     if ((item == NULL) || (outputBuffer == NULL)) {
@@ -1218,7 +1218,7 @@ fail:
 }
 
 /* Render an array to text */
-static JsonBool printArray(const Json * const item, PrintBuffer * const outputBuffer) {
+static JsonBool printArray(const Json *item, PrintBuffer *outputBuffer) {
     unsigned char *outputPointer = NULL;
     size_t length = 0;
     Json *currentElement = item->child;
@@ -1275,7 +1275,7 @@ static JsonBool printArray(const Json * const item, PrintBuffer * const outputBu
 }
 
 /* Build an object from the text. */
-static JsonBool parseObject(Json * const item, ParseBuffer * const inputBuffer) {
+static JsonBool parseObject(Json *item, ParseBuffer *inputBuffer) {
     Json *head = NULL; /* linked list head */
     Json *currentItem = NULL;
 
@@ -1378,7 +1378,7 @@ fail:
 }
 
 /* Render an object to text. */
-static JsonBool printObject(const Json * const item, PrintBuffer * const outputBuffer) {
+static JsonBool printObject(const Json *item, PrintBuffer *outputBuffer) {
     unsigned char *outputPointer = NULL;
     size_t length = 0;
     Json *currentItem = item->child;
@@ -1671,7 +1671,7 @@ JsonBool addJsonItemReferenceToObject(Json *object, const char *string, Json *it
     return addItemToObject(object, string, createReference(item), false);
 }
 
-Json* addJsonNullToObject(Json * const object, const char * const name) {
+Json* addJsonNullToObject(Json *object, const char *name) {
     Json *null = createJsonNull();
     if (addItemToObject(object, name, null, false)) {
         return null;
@@ -1680,7 +1680,7 @@ Json* addJsonNullToObject(Json * const object, const char * const name) {
     return NULL;
 }
 
-Json* addJsonTrueToObject(Json * const object, const char * const name) {
+Json* addJsonTrueToObject(Json *object, const char *name) {
     Json *trueItem = createJsonTrue();
     if (addItemToObject(object, name, trueItem, false)) {
         return trueItem;
@@ -1689,7 +1689,7 @@ Json* addJsonTrueToObject(Json * const object, const char * const name) {
     return NULL;
 }
 
-Json* addJsonFalseToObject(Json * const object, const char * const name) {
+Json* addJsonFalseToObject(Json *object, const char *name) {
     Json *falseItem = createJsonFalse();
     if (addItemToObject(object, name, falseItem, false)) {
         return falseItem;
@@ -1698,7 +1698,7 @@ Json* addJsonFalseToObject(Json * const object, const char * const name) {
     return NULL;
 }
 
-Json* addJsonBoolToObject(Json * const object, const char * const name, const JsonBool boolean) {
+Json* addJsonBoolToObject(Json *object, const char *name, const JsonBool boolean) {
     Json *boolItem = createJsonBool(boolean);
     if (addItemToObject(object, name, boolItem, false)) {
         return boolItem;
@@ -1708,7 +1708,7 @@ Json* addJsonBoolToObject(Json * const object, const char * const name, const Js
     return NULL;
 }
 
-Json* addJsonNumberToObject(Json * const object, const char * const name, const double number) {
+Json* addJsonNumberToObject(Json *object, const char *name, const double number) {
     Json *numberItem = createJsonNumber(number);
     if (addItemToObject(object, name, numberItem, false)) {
         return numberItem;
@@ -1718,7 +1718,7 @@ Json* addJsonNumberToObject(Json * const object, const char * const name, const 
     return NULL;
 }
 
-Json* addJsonStringToObject(Json * const object, const char * const name, const char * const string) {
+Json* addJsonStringToObject(Json *object, const char *name, const char *string) {
     Json *stringItem = createJsonString(string);
     if (addItemToObject(object, name, stringItem, false)) {
         return stringItem;
@@ -1728,7 +1728,7 @@ Json* addJsonStringToObject(Json * const object, const char * const name, const 
     return NULL;
 }
 
-Json* addJsonRawToObject(Json * const object, const char * const name, const char * const raw) {
+Json* addJsonRawToObject(Json *object, const char *name, const char *raw) {
     Json *rawItem = createJsonRaw(raw);
     if (addItemToObject(object, name, rawItem, false)) {
         return rawItem;
@@ -1738,7 +1738,7 @@ Json* addJsonRawToObject(Json * const object, const char * const name, const cha
     return NULL;
 }
 
-Json* addJsonObjectToObject(Json * const object, const char * const name) {
+Json* addJsonObjectToObject(Json *object, const char *name) {
     Json *objectItem = createJsonObject();
     if (addItemToObject(object, name, objectItem, false)) {
         return objectItem;
@@ -1748,7 +1748,7 @@ Json* addJsonObjectToObject(Json * const object, const char * const name) {
     return NULL;
 }
 
-Json* addJsonArrayToObject(Json * const object, const char * const name) {
+Json* addJsonArrayToObject(Json *object, const char *name) {
     Json *array = createJsonArray();
     if (addItemToObject(object, name, array, false)) {
         return array;
@@ -1758,7 +1758,7 @@ Json* addJsonArrayToObject(Json * const object, const char * const name) {
     return NULL;
 }
 
-Json* detachJsonItemViaPointer(Json *parent, Json * const item) {
+Json* detachJsonItemViaPointer(Json *parent, Json *item) {
     if ((parent == NULL) || (item == NULL) || (item != parent->child && item->prev == NULL)) {
         return NULL;
     }
@@ -1847,7 +1847,7 @@ JsonBool JsonInsertItemInArray(Json *array, int which, Json *newitem) {
     return true;
 }
 
-JsonBool JsonReplaceItemViaPointer(Json * const parent, Json * const item, Json * replacement) {
+JsonBool JsonReplaceItemViaPointer(Json *parent, Json *item, Json *replacement) {
     if ((parent == NULL) || (parent->child == NULL) || (replacement == NULL) || (item == NULL)) {
         return false;
     }
@@ -2406,7 +2406,7 @@ JsonBool isJsonRaw(const Json *item) {
     return (item->type & 0xFF) == JsonRaw;
 }
 
-JsonBool compareJson(const Json * const a, const Json * const b, const JsonBool caseSensitive) {
+JsonBool compareJson(const Json *a, const Json *b, const JsonBool caseSensitive) {
     if ((a == NULL) || (b == NULL) || ((a->type & 0xFF) != (b->type & 0xFF))) {
         return false;
     }

@@ -151,7 +151,7 @@ Command* parseCommand(char *commandLine) {
     char *commandName = (char *)malloc(COMMAND_NAME_BUFFER_SIZE);
     bool success = parseCommandElement(commandLine, commandName);
     if (!success) {
-        printMessage(RED, "Command name is illegal or invalid^o^\n");
+        printMessage(RED, "Command name is illegal or invalid^o^");
         return NULL;
     }
     String *name = createString(commandName);
@@ -163,7 +163,7 @@ Command* parseCommand(char *commandLine) {
             char *commandParam = (char *)malloc(COMMAND_PARAM_BUFFER_SIZE);
             bool success = parseCommandElement(commandLine, commandParam);
             if (!success) {
-                printMessage(RED, "Command parameter is blank[%s]^o^\n", name->getValue(name));
+                printMessage(RED, "Command parameter is blank[%s]^o^", name->getValue(name));
                 return NULL;
             }
             
@@ -174,7 +174,7 @@ Command* parseCommand(char *commandLine) {
         }
         return buildCommand(name, NULL, configuration->executor, configuration->requireConfirm);
     } else {
-        printMessage(RED, "Command is not supported[%s]^o^\n", name->getValue(name));
+        printMessage(RED, "Command is not supported[%s]^o^", name->getValue(name));
         return NULL;
     }
 }
@@ -231,7 +231,7 @@ void runCommandEvent() {
     commandBuffer = (char *)malloc(COMMAND_BUFFER_SIZE);
     while(true) {
         if (!commandRequireConfirm) {
-            printMessage(GREEN, "Please enter command here^+^\n");
+            printMessage(GREEN, "Please enter command here^+^");
         }
         
         fgets(commandBuffer, COMMAND_BUFFER_SIZE, stdin);
@@ -239,7 +239,7 @@ void runCommandEvent() {
         if (commandRequireConfirm) {
             int state = parseConfirmState(commandBuffer);
             if (state == CONFIRM_STATE_UNKNOWN) {
-                printMessage(YELLOW, "Please enter confirm decision[Yes|No]!\n");
+                printMessage(YELLOW, "Please enter confirm decision[Yes|No]!");
                 continue;
             }
 
@@ -274,44 +274,44 @@ void runCommandEvent() {
 
 void showNetworkInfo() {
     printMessage(CYAN, "\n");
-    printMessage(CYAN, " ****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** \n");
-    printMessage(CYAN, " ** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  \n");
-    printMessage(CYAN, " ** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   \n");
-    printMessage(CYAN, " ** ** **   **   **       ** ** **   **  ** ****   *******  *****    ** ** **    **    *** ***   **  ** ****   ****  \n");
-    printMessage(CYAN, " ****  **** **** **       **  * ****  ****  ** *****     ** *****    **  * ****  **     ** **     ****  ** *** ** ** \n");
+    printMessage(CYAN, " ****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** ");
+    printMessage(CYAN, " ** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  ");
+    printMessage(CYAN, " ** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   ");
+    printMessage(CYAN, " ** ** **   **   **       ** ** **   **  ** ****   *******  *****    ** ** **    **    *** ***   **  ** ****   ****  ");
+    printMessage(CYAN, " ****  **** **** **       **  * ****  ****  ** *****     ** *****    **  * ****  **     ** **     ****  ** *** ** ** ");
     printMessage(CYAN, "\n");
-    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ SmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  +\n");
-    printMessage(WHITE, "+ be configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     +\n");
-    printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork                                                                      +\n");
-    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ SmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  +");
+    printMessage(WHITE, "+ be configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     +");
+    printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork                                                                      +");
+    printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "\n");
 }
 
 void showCommandInfo() {
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ Command           + Description                                                                                   +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ loadConfig        + load model configuration file from config path parameter. It is used to initialize model.     +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ loadModel         + load model data file from mdoel path parameter. It is used to load model saved before.        +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ saveModel         + save model data to mdoel file with path parameter. It is used to save model after trained.    +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ showModel         + show model structure with layer and dimension. It is used to show model configurations.       +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ loadMnistData     + load mnist train data from mnist data file path parameter. Support mnist-fashion dataset.     +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ loadMnistLabel    + load mnist train label from mnist label file path parameter. Support mnist-fashion dataset.   +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ startTrain        + start to train model with loaded data and label. It is called after train data is loaded.     +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ predict           + predict model label with model data by the trained model. It is called only after trained.    +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ showHelp          + show command help information list just as above content.                                     +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
-    printMessage(WHITE, "+ quit              + quit running process without saving model data to model file anyway.                          +\n");
-    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+\n");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ Command           + Description                                                                                   +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ loadConfig        + load model configuration file from config path parameter. It is used to initialize model.     +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ loadModel         + load model data file from mdoel path parameter. It is used to load model saved before.        +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ saveModel         + save model data to mdoel file with path parameter. It is used to save model after trained.    +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ showModel         + show model structure with layer and dimension. It is used to show model configurations.       +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ loadMnistData     + load mnist train data from mnist data file path parameter. Support mnist-fashion dataset.     +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ loadMnistLabel    + load mnist train label from mnist label file path parameter. Support mnist-fashion dataset.   +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ startTrain        + start to train model with loaded data and label. It is called after train data is loaded.     +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ predict           + predict model label with model data by the trained model. It is called only after trained.    +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ showHelp          + show command help information list just as above content.                                     +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ quit              + quit running process without saving model data to model file anyway.                          +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "\n");
 }
 

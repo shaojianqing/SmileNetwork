@@ -1,0 +1,2 @@
+
+Result *loadNetworkConfig(char *filepath);

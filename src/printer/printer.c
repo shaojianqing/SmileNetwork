@@ -14,21 +14,21 @@ void printMessage(Color color, const char *format, ...) {
     va_end(args);
 
     if (color == RED) {
-        printf("\033[31m%s\033[0m", buffer);
+        printf("\033[31m%s\n\033[0m", buffer);
     } else if (color == BLACK) {
-        printf("\033[30m%s\033[0m", buffer);
+        printf("\033[30m%s\n\033[0m", buffer);
     } else if (color == GREEN) {
-        printf("\033[32m%s\033[0m", buffer);
+        printf("\033[32m%s\n\033[0m", buffer);
     } else if (color == YELLOW) {
-        printf("\033[33m%s\033[0m", buffer);
+        printf("\033[33m%s\n\033[0m", buffer);
     } else if (color == BLUE) {
-        printf("\033[34m%s\033[0m", buffer);
+        printf("\033[34m%s\n\033[0m", buffer);
     } else if (color == CYAN) {
-        printf("\033[36m%s\033[0m", buffer);
+        printf("\033[36m%s\n\033[0m", buffer);
     } else if (color == PURPLE) {
-        printf("\033[35m%s\033[0m", buffer);
+        printf("\033[35m%s\n\033[0m", buffer);
     } else if (color == WHITE) {
-        printf("\033[37m%s\033[0m", buffer);
+        printf("\033[37m%s\n\033[0m", buffer);
     }
 }
 

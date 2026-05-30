@@ -7,7 +7,7 @@
 #include "logger/logger.h"
 #include "random/random.h"
 #include "command/command.h"
-#include "network/result.h"
+#include "result/result.h"
 #include "network/bias.h"
 #include "network/vector.h"
 #include "network/activator.h"

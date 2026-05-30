@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/random.o tgt/printer.o tgt/mnist.o tgt/model.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/random.o tgt/printer.o tgt/file.o tgt/mnist.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
 
 .PHONY : build clean
 
@@ -40,10 +40,19 @@ tgt/random.o : src/random/random.c src/random/random.h
 tgt/printer.o : src/printer/printer.c src/printer/printer.h
 	$(CC) $(CCFLAGES) $< -o $@
 
+tgt/file.o : src/file/file.c src/file/file.h
+	$(CC) $(CCFLAGES) $< -o $@
+
 tgt/mnist.o : src/dataset/mnist.c src/dataset/mnist.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/model.o : src/model/model.c src/model/model.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/config.o : src/network/config.c src/network/config.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/network.o : src/network/network.c src/network/network.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/activator.o : src/network/activator.c src/network/activator.h
@@ -64,7 +73,7 @@ tgt/bias.o : src/network/bias.c src/network/bias.h
 tgt/matrix.o : src/network/matrix.c src/network/matrix.h
 	$(CC) $(CCFLAGES) $< -o $@
 
-tgt/result.o : src/network/result.c src/network/result.h
+tgt/result.o : src/result/result.c src/result/result.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/vector.o : src/network/vector.c src/network/vector.h

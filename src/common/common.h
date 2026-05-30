@@ -1,7 +1,7 @@
 /*
  * Definition of byte type;
  */
-typedef char byte;
+typedef unsigned char byte;
 
 /*
  * Definition of bool type;
