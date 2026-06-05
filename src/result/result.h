@@ -5,9 +5,12 @@
 #define TYPE_VECTOR             4
 #define TYPE_METRIX             5
 #define TYPE_NETWORK_CONFIG     6
+#define TYPE_MNIST_DATA         7
+#define TYPE_MNIST_LABEL        8
+#define TYPE_TRAIN_BATCH        9
 
 #define SUCCESS                 0
-#define MEMORY_ALLOCATE_ERROR   1
+#define MEMORY_ALLOC_ERROR      1
 #define INSTANCE_IS_NULL        2
 #define MATRIX_NOT_MATCH        3
 #define VECTOR_NOT_MATCH        4
@@ -16,6 +19,9 @@
 #define FILE_OPEN_ERROR         7
 #define FILE_READ_ERROR         8
 #define CONFIG_NO_EXIST         9
+#define MAGIC_NOT_MATCH         10
+#define MNIST_NOT_MATCH         11
+#define VECTOR_NO_ELEMENT       12
 
 typedef struct Result Result;
 

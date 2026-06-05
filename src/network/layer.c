@@ -31,9 +31,9 @@ static Result* backwardInner(BaseLayer *this, Vector *target);
 
 static Result* backwardOutput(BaseLayer *this, Vector *target);
 
-static Result* forewardInner(BaseLayer *this, Vector *vector);
+static Result* forwardInner(BaseLayer *this, Vector *vector);
 
-static Result* forewardOutput(BaseLayer *this, Vector *vector);
+static Result* forwardOutput(BaseLayer *this, Vector *vector);
 
 static Result* optimizeInner(BaseLayer *this, float learnRate);
 
@@ -61,7 +61,7 @@ OutputLayer *buildOutputLayer(LayerConfig config) {
         outputLayer->loss = loss;
 
         BaseLayer *baseLayer = (BaseLayer*)outputLayer;
-        baseLayer->foreward = forewardOutput;
+        baseLayer->forward = forwardOutput;
         baseLayer->backward = backwardOutput;
         baseLayer->optimize = optimizeInner;
         bool success = prepareBaselayer(baseLayer, config);
@@ -106,7 +106,7 @@ HiddenLayer *buildHiddenLayer(LayerConfig config) {
     HiddenLayer *hiddenLayer = (HiddenLayer*)allocate(sizeof(HiddenLayer));
     if (hiddenLayer != NULL) {
         BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
-        baseLayer->foreward = forewardInner;
+        baseLayer->forward = forwardInner;
         baseLayer->backward = backwardInner;
         baseLayer->optimize = optimizeInner;
         bool success = prepareBaselayer(baseLayer, config);
@@ -184,7 +184,7 @@ static void releaseBaselayer(BaseLayer *baseLayer) {
 }
 
 static Result* input(InputLayer *this, Vector *vector) {
-    return forewardInner((BaseLayer*)this, vector);
+    return forwardInner((BaseLayer*)this, vector);
 }
 
 static Result* output(OutputLayer *this) {
@@ -194,7 +194,7 @@ static Result* output(OutputLayer *this) {
     Vector *outputVector = createVector(resultVector->count);
     if (outputVector == NULL) {
         char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     outputVector->copy(outputVector, resultVector);
@@ -210,13 +210,59 @@ static Result* loss(OutputLayer *this, Vector *expect) {
     }
 
     BaseLayer *baseLayer = (BaseLayer*)this;
-    Result *lossResult = this->activatorLossFunc(baseLayer->resultVector, expect);
-    if (!lossResult->success(lossResult)) {
-        return lossResult;
+    return this->activatorLossFunc(baseLayer->resultVector, expect);
+}
+
+static Result* forwardInner(BaseLayer *this, Vector *vector) {
+    Activator *activator = this->activator;
+    Matrix *matrix = this->modelMatrix;
+    Bias *bias = this->modelBias;
+
+    this->inputVector = vector;
+    Result *matrixMulResult = matrix->mulVector(matrix, vector);
+    if (!matrixMulResult->success(matrixMulResult)) {
+        return matrixMulResult;
     }
-    releaseResult(lossResult);
-    float lossValue = lossResult->getValue(lossResult);
-    return createResultWithValue(SUCCESS, NULL, lossValue);
+
+    Vector *innerVector = (Vector*)matrixMulResult->data;
+    releaseResult(matrixMulResult);
+    Result *addBiasResult = innerVector->addBias(innerVector, bias);
+    if (!addBiasResult->success(addBiasResult)) {
+        return addBiasResult;
+    }
+    releaseResult(addBiasResult);
+
+    Vector *activateVector = activator->activate(innerVector);
+    if (this->nextLayer != NULL) {
+        BaseLayer *nextLayer = this->nextLayer;
+        Result *finalResult = nextLayer->forward(nextLayer, activateVector);
+        return finalResult;
+    } else {
+        this->resultVector = activateVector;
+        return createResultWithoutData(SUCCESS, NULL);
+    }
+}
+
+static Result* forwardOutput(BaseLayer *this, Vector *vector) {
+    Matrix *matrix = this->modelMatrix;
+    Bias *bias = this->modelBias;
+    
+    this->inputVector = vector;
+    Result *matrixMulResult = matrix->mulVector(matrix, vector);
+    if (!matrixMulResult->success(matrixMulResult)) {
+        return matrixMulResult;
+    }
+    Vector *innerVector = (Vector*)matrixMulResult->data;
+    releaseResult(matrixMulResult);
+
+    Result *addBiasResult = innerVector->addBias(innerVector, bias);
+    if (!addBiasResult->success(addBiasResult)) {
+        return addBiasResult;
+    }
+    releaseResult(addBiasResult);
+
+    this->resultVector = innerVector;
+    return createResultWithoutData(SUCCESS, NULL);
 }
     
 static Result* backwardInner(BaseLayer *this, Vector *target) {
@@ -280,24 +326,27 @@ static Result* backwardOutput(BaseLayer *this, Vector *target) {
     if (!gradientResult->success(gradientResult)) {
         return gradientResult;
     }
+    
+    Vector *gradientVector = (Vector*)gradientResult->getData(gradientResult);
     releaseResult(gradientResult);
 
-    Vector *gradientVector = (Vector*)gradientResult->getData(gradientResult);
     Vector *inputVector = this->inputVector;
     Result *matrixMulResult = gradientVector->matrixMul(gradientVector, inputVector);
     if (!matrixMulResult->success(matrixMulResult)) {
         return matrixMulResult;
     }
-    releaseResult(matrixMulResult);
+    
     this->gradientMatrix = (Matrix*)matrixMulResult->getData(matrixMulResult);
+    releaseResult(matrixMulResult);
 
     Bias *gradientBias = createBias(gradientVector->count, NULL);
     Result *biasCopyResult = gradientBias->copy(gradientBias, gradientVector);
     if (!biasCopyResult->success(biasCopyResult)) {
         return biasCopyResult;
     }
-    releaseResult(biasCopyResult);
+
     this->gradientBias = gradientBias;
+    releaseResult(biasCopyResult);
 
     BaseLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
@@ -322,60 +371,6 @@ static Result* backwardOutput(BaseLayer *this, Vector *target) {
     } else {
         return createResultWithoutData(SUCCESS, NULL);
     }
-}
-
-static Result* forewardInner(BaseLayer *this, Vector *vector) {
-    Activator *activator = this->activator;
-    Matrix *matrix = this->modelMatrix;
-    Bias *bias = this->modelBias;
-
-    this->inputVector = vector;
-
-    logger.error("matrix column count[%i] does not match vector count[%i]^o^", matrix->columnCount, vector->count);
-    Result *matrixMulResult = matrix->mulVector(matrix, vector);
-    if (!matrixMulResult->success(matrixMulResult)) {
-        return matrixMulResult;
-    }
-
-    Vector *innerVector = (Vector*)matrixMulResult->data;
-    releaseResult(matrixMulResult);
-    Result *addBiasResult = innerVector->addBias(innerVector, bias);
-    if (!addBiasResult->success(addBiasResult)) {
-        return addBiasResult;
-    }
-    releaseResult(addBiasResult);
-
-    Vector *activateVector = activator->activate(innerVector);
-    if (this->nextLayer != NULL) {
-        BaseLayer *nextLayer = this->nextLayer;
-        Result *finalResult = nextLayer->foreward(this, activateVector);
-        return finalResult;
-    } else {
-        this->resultVector = activateVector;
-        return createResultWithoutData(SUCCESS, NULL);
-    }
-}
-
-static Result* forewardOutput(BaseLayer *this, Vector *vector) {
-    Matrix *matrix = this->modelMatrix;
-    Bias *bias = this->modelBias;
-    
-    logger.error("matrix column count[%i] does not match vector count[%i]^o^", matrix->columnCount, vector->count);
-    Result *matrixMulResult = matrix->mulVector(matrix, vector);
-    if (!matrixMulResult->success(matrixMulResult)) {
-        return matrixMulResult;
-    }
-    Vector *innerVector = (Vector*)matrixMulResult->data;
-    releaseResult(matrixMulResult);
-
-    Result *addBiasResult = innerVector->addBias(innerVector, bias);
-    if (!addBiasResult->success(addBiasResult)) {
-        return addBiasResult;
-    }
-    releaseResult(addBiasResult);
-
-    this->resultVector = innerVector;
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
 static Result* optimizeInner(BaseLayer *this, float learnRate) {

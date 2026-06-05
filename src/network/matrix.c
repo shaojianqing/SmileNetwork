@@ -30,14 +30,17 @@ static void setElementValue(Matrix *this, int row, int column, float data);
 Matrix* createMatrix(int rowCount, int columnCount, Random random) {
     Matrix *matrix = (Matrix*)allocate(sizeof(Matrix));
     if (matrix != NULL) {
-        matrix->mulVector = mulVector;
+        matrix->transpose = transpose;
         matrix->addMatrix = addMatrix;
         matrix->subMatrix = subMatrix;
+        matrix->mulVector = mulVector;
         matrix->mulMatrix = mulMatrix;
-        matrix->transpose = transpose;
+        matrix->mulNumber = mulNumber;
         matrix->setValue = setElementValue;
 
-        matrix->data = (float*)allocate(sizeof(float)*rowCount*columnCount);
+        matrix->rowCount = rowCount;
+        matrix->columnCount = columnCount;
+        matrix->data = (float *)allocate(sizeof(float)*rowCount*columnCount);
 
         if (random != NULL) {
             int i = 0, totalCount = rowCount*columnCount;
@@ -62,10 +65,10 @@ static Result* mulVector(Matrix *this, Vector *vector) {
         return createResultWithoutData(MATRIX_NOT_MATCH, message);
     }
 
-    Vector *resultVector = createVector(this->columnCount);
+    Vector *resultVector = createVector(this->rowCount);
     if (resultVector == NULL) {
         char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0, j = 0;
@@ -143,7 +146,7 @@ static Result* mulMatrix(Matrix *this, Matrix *matrix) {
     Matrix *resultMatrix = createMatrix(this->rowCount, matrix->columnCount, NULL);
     if (resultMatrix == NULL) {
         char *message = "can not create matrix instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0, j = 0, k = 0;
@@ -186,7 +189,7 @@ static Result* transpose(Matrix *this) {
     Matrix *transposeMatrix = createMatrix(this->columnCount, this->rowCount, NULL);
     if (transposeMatrix == NULL) {
         char *message = "can not create matrix instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0, j = 0;

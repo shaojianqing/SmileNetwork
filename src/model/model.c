@@ -9,6 +9,6 @@ Model* loadModelFromFile(const char* filename) {
     return NULL;
 }
 
-int saveModelToFile(Model* model, const char* filename) {
+int saveModelToFile(const char* filename, Model* model) {
     return 0;
 }

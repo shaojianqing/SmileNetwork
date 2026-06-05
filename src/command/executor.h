@@ -25,6 +25,10 @@ bool loadConfigRequireConfirm(Command *command);
 
 bool loadModelRequireConfirm(Command *command);
 
+bool loadMnistDataRequireConfirm(Command *command);
+
+bool loadMnistLabelRequireConfirm(Command *command);
+
 bool saveModelRequireConfirm(Command *command);
 
 bool startTrainRequireConfirm(Command *command);

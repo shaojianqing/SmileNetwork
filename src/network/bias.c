@@ -21,14 +21,14 @@ static Result* mulNumber(Bias *this, float number);
 Bias *createBias(int dimensionCount, Random random) {
     Bias *bias = (Bias*)allocate(sizeof(Bias));
     if (bias != NULL) {
-        bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
-        bias->count = dimensionCount;
-
         bias->getValue = getValue;
         bias->setValue = setValue;
         bias->copy = copy;
         bias->subBias = subBias;
         bias->mulNumber = mulNumber;
+
+        bias->count = dimensionCount;
+        bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
 
         if (random != NULL) {
             int i = 0;

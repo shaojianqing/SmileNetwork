@@ -16,18 +16,26 @@ typedef struct NeuralNetwork NeuralNetwork;
 
 struct NetworkConfig {
 
+    int trainBatchSize;
+
+    int trainEpochCount;
+
+    float learnRateValue;
+
+    int hiddenLayerConfigCount;
+
     LayerConfig inputLayerConfig;
 
     LayerConfig outputLayerConfig;
 
     LayerConfig *hiddenLayerConfigList;
-
-    int hiddenLayerConfigCount;
-
-    float learnRateConfigValue;
 };
 
 struct NeuralNetwork {
+
+    int trainEpochCount;
+
+    int trainBatchSize;
 
     float learnRateValue;
 
@@ -39,7 +47,7 @@ struct NeuralNetwork {
 
     int hiddenLayerCount;
 
-    Result* (*train)(NeuralNetwork *this, TrainData **tainDataList, int trainDataCount);
+    Result* (*train)(NeuralNetwork *this, TrainBatch *trainBatch);
 
     Result* (*predict)(NeuralNetwork *this, Vector *vector);
 };

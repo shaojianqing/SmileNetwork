@@ -64,8 +64,6 @@ struct Configuration {
     RequireConfirm requireConfirm;
 };
 
-static char *commandBuffer;
-
 static HashMap *commandConfigMap;
 
 static bool isCommandBlank(char *commandLine);
@@ -86,62 +84,52 @@ void initCommandConfig() {
 
     String *loadConfigName = createString(LOAD_CONFIG_NAME);
     String *loadConfigDesc = createString(LOAD_CONFIG_DESC);
-    Configuration *loadConfigConfiguration = buildConfiguration(loadConfigName, loadConfigDesc, 
-                                                                true, loadConfigExecutor, loadConfigRequireConfirm);
+    Configuration *loadConfigConfiguration = buildConfiguration(loadConfigName, loadConfigDesc, true, loadConfigExecutor, loadConfigRequireConfirm);
     commandConfigMap->put(commandConfigMap, loadConfigName, loadConfigConfiguration);
 
     String *loadModelName = createString(LOAD_MODEL_NAME);
     String *loadModelDesc = createString(LOAD_MODEL_DESC);
-    Configuration *loadModelConfiguration = buildConfiguration(loadModelName, loadModelDesc, 
-                                                               true, loadModelExecutor, loadModelRequireConfirm);
+    Configuration *loadModelConfiguration = buildConfiguration(loadModelName, loadModelDesc, true, loadModelExecutor, loadModelRequireConfirm);
     commandConfigMap->put(commandConfigMap, loadModelName, loadModelConfiguration);
 
     String *saveModelName = createString(SAVE_MODEL_NAME);
     String *saveModelDesc = createString(SAVE_MODEL_DESC);
-    Configuration *saveModelConfiguration = buildConfiguration(saveModelName, saveModelDesc, 
-                                                               true, saveModelExecutor, saveModelRequireConfirm);
+    Configuration *saveModelConfiguration = buildConfiguration(saveModelName, saveModelDesc, true, saveModelExecutor, saveModelRequireConfirm);
     commandConfigMap->put(commandConfigMap, saveModelName, saveModelConfiguration);
 
     String *showModelName = createString(SHOW_MODEL_NAME);
     String *showModelDesc = createString(SHOW_MODEL_DESC);
-    Configuration *showModelConfiguration = buildConfiguration(showModelName, showModelDesc, 
-                                                               false, showModelExecutor, defaultRequireConfirm);
+    Configuration *showModelConfiguration = buildConfiguration(showModelName, showModelDesc, false, showModelExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, showModelName, showModelConfiguration);
 
     String *loadMnistDataName = createString(LOAD_MNIST_DATA_NAME);
     String *loadMnistDataDesc = createString(LOAD_MNIST_DATA_DESC);
-    Configuration *loadMnistDataConfiguration = buildConfiguration(loadMnistDataName, loadMnistDataDesc, 
-                                                                   true, loadMnistDataExecutor, defaultRequireConfirm);
+    Configuration *loadMnistDataConfiguration = buildConfiguration(loadMnistDataName, loadMnistDataDesc, true, loadMnistDataExecutor, loadMnistDataRequireConfirm);
     commandConfigMap->put(commandConfigMap, loadMnistDataName, loadMnistDataConfiguration);
 
     String *loadMnistLabelName = createString(LOAD_MNIST_LABEL_NAME);
     String *loadMnistLabelDesc = createString(LOAD_MNIST_LABEL_DESC);
-    Configuration *loadMnistLabelConfiguration = buildConfiguration(loadMnistLabelName, loadMnistLabelDesc, 
-                                                                    true, loadMnistLabelExecutor, defaultRequireConfirm);
+    Configuration *loadMnistLabelConfiguration = buildConfiguration(loadMnistLabelName, loadMnistLabelDesc, true, loadMnistLabelExecutor, loadMnistLabelRequireConfirm);
     commandConfigMap->put(commandConfigMap, loadMnistLabelName, loadMnistLabelConfiguration);
 
     String *startTrainName = createString(START_TRAIN_NAME);
     String *startTrainDesc = createString(START_TRAIN_DESC);
-    Configuration *startTrainConfiguration = buildConfiguration(startTrainName, startTrainDesc, 
-                                                                false, startTrainExecutor, startTrainRequireConfirm);
+    Configuration *startTrainConfiguration = buildConfiguration(startTrainName, startTrainDesc, false, startTrainExecutor, startTrainRequireConfirm);
     commandConfigMap->put(commandConfigMap, startTrainName, startTrainConfiguration);
 
     String *predictName = createString(PREDICT_NAME);
     String *predictDesc = createString(PREDICT_DESC);
-    Configuration *predictConfiguration = buildConfiguration(predictName, predictDesc, 
-                                                             true, predictExecutor, defaultRequireConfirm);
+    Configuration *predictConfiguration = buildConfiguration(predictName, predictDesc, true, predictExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, predictName, predictConfiguration);
 
     String *showHelpName = createString(SHOW_HELP_NAME);
     String *showHelpDesc = createString(SHOW_HELP_DESC);
-    Configuration *showHelpConfiguration = buildConfiguration(showHelpName, showHelpDesc, 
-                                                              false, showHelpExecutor, defaultRequireConfirm);
+    Configuration *showHelpConfiguration = buildConfiguration(showHelpName, showHelpDesc, false, showHelpExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, showHelpName, showHelpConfiguration);
 
     String *printMemName = createString(PRINT_MEM_NAME);
     String *printMemDesc = createString(PRINT_MEM_DESC);
-    Configuration *printMemConfiguration = buildConfiguration(printMemName, printMemDesc, 
-                                                              false, printMemExecutor, defaultRequireConfirm);
+    Configuration *printMemConfiguration = buildConfiguration(printMemName, printMemDesc, false, printMemExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, printMemName, printMemConfiguration);
 
     String *quitName = createString(QUIT_NAME);
@@ -150,7 +138,7 @@ void initCommandConfig() {
     commandConfigMap->put(commandConfigMap, quitName, quitConfiguration);
 }
 
-Command* parseCommand(char *commandLine) {
+static Command* parseCommand(char *commandLine) {
     if (isCommandBlank(commandLine)) {
         return NULL;
     }
@@ -162,8 +150,6 @@ Command* parseCommand(char *commandLine) {
         return NULL;
     }
     String *name = createString(commandName);
-    release(commandName);
-
     if (commandConfigMap->containsKey(commandConfigMap, name)) {
         Configuration *configuration = commandConfigMap->get(commandConfigMap, name);
         if (configuration->requireParameter) {
@@ -175,8 +161,6 @@ Command* parseCommand(char *commandLine) {
             }
             
             String *parameter = createString(commandParam);
-            release(commandParam);
-
             return buildCommand(name, parameter, configuration->executor, configuration->requireConfirm);
         }
         return buildCommand(name, NULL, configuration->executor, configuration->requireConfirm);
@@ -235,7 +219,7 @@ void runCommandEvent() {
 
     Command *currentCommand = NULL;
     bool commandRequireConfirm = false;
-    commandBuffer = (char *)allocate(COMMAND_BUFFER_SIZE);
+    char *commandBuffer = (char *)allocate(COMMAND_BUFFER_SIZE);
     while(true) {
         if (!commandRequireConfirm) {
             printMessage(GREEN, "Please enter command here^+^");
@@ -264,7 +248,6 @@ void runCommandEvent() {
                 currentCommand = NULL;
             }
         } else {
-            
             currentCommand = parseCommand(commandBuffer);
             if (currentCommand != NULL) {
                 if (currentCommand->requireConfirm(currentCommand)) {
@@ -280,7 +263,6 @@ void runCommandEvent() {
 }
 
 void showNetworkInfo() {
-    printMessage(CYAN, "\n");
     printMessage(CYAN, " ****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** ");
     printMessage(CYAN, " ** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  ");
     printMessage(CYAN, " ** ** **** **** ****     ***** **** **  ** *****   ** **   **       ***** ****  **   ** *** **  **  ** *****  ***   ");
@@ -292,10 +274,10 @@ void showNetworkInfo() {
     printMessage(WHITE, "+ be configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     +");
     printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork                                                                      +");
     printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+");
-    printMessage(WHITE, "\n");
 }
 
 void showCommandInfo() {
+    printMessage(WHITE, "\n");
     printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "+ Command           + Description                                                                                   +");
     printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");

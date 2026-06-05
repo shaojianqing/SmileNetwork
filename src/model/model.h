@@ -32,4 +32,4 @@ struct Model {
 
 Model* loadModeFromFile(const char* filename);
 
-int saveModelToFile(Model* model, const char* filename);
+int saveModelToFile(const char* filename, Model* model);

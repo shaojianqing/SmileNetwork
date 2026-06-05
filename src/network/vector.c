@@ -9,6 +9,8 @@
 #include "vector.h"
 #include "matrix.h"
 
+static void normalize(Vector *this);
+
 static Result* add(Vector *this, Vector *vector);
 
 static Result* mul(Vector *this, Vector *vector);
@@ -32,12 +34,36 @@ Vector *createVector(int count) {
         vector->add = add;
         vector->mul = mul;
         vector->addBias = addBias;
+        vector->normalize = normalize;
+        vector->matrixMul = matrixMul;
 
         vector->copy = copy;
         vector->getValue = getValue;
         vector->setValue = setValue;
     }
     return vector;
+}
+
+static void normalize(Vector *this) {
+    if (this == NULL) {
+        return;
+    }
+
+    if (this->count > 0) {
+        float maxElement = this->elements[0];
+        int i = 0;
+        for (i=0;i<this->count;++i) {
+            if (this->elements[i] > maxElement) {
+                maxElement = this->elements[i];
+            }
+        }
+
+        if (maxElement != 0.0) {
+            for (i=0;i<this->count;++i) {
+                this->elements[i] = this->elements[i] / maxElement;
+            }
+        }
+    }
 }
 
 static Result* add(Vector *this, Vector *vector) {
@@ -92,7 +118,7 @@ static Result* matrixMul(Vector *this, Vector *target) {
     Matrix *resultMatrix = createMatrix(this->count, target->count, NULL);
     if (resultMatrix == NULL) {
         char *message = "can not create matrix instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0, j = 0;

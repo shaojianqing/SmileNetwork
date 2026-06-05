@@ -7,13 +7,13 @@
 CP = cp
 CC = gcc
 SUDO = sudo
-CCFLAGES = -c
+CCFLAGES = -c -g -O0
 
 TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/random.o tgt/printer.o tgt/file.o tgt/mnist.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/label.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/traindata.o
+OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/bytereader.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/mnist.o tgt/train.o
 
 .PHONY : build clean
 
@@ -37,6 +37,9 @@ tgt/hashmap.o : src/datatype/hashmap.c src/datatype/hashmap.h
 tgt/json.o : src/json/json.c src/json/json.h
 	$(CC) $(CCFLAGES) $< -o $@
 
+tgt/bytereader.o : src/reader/bytereader.c src/reader/bytereader.h
+	$(CC) $(CCFLAGES) $< -o $@
+
 tgt/random.o : src/random/random.c src/random/random.h
 	$(CC) $(CCFLAGES) $< -o $@
 
@@ -44,9 +47,6 @@ tgt/printer.o : src/printer/printer.c src/printer/printer.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/file.o : src/file/file.c src/file/file.h
-	$(CC) $(CCFLAGES) $< -o $@
-
-tgt/mnist.o : src/dataset/mnist.c src/dataset/mnist.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/model.o : src/model/model.c src/model/model.h
@@ -59,9 +59,6 @@ tgt/network.o : src/network/network.c src/network/network.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/activator.o : src/network/activator.c src/network/activator.h
-	$(CC) $(CCFLAGES) $< -o $@
-
-tgt/label.o : src/network/label.c src/network/label.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/layer.o : src/network/layer.c src/network/layer.h
@@ -82,7 +79,10 @@ tgt/result.o : src/result/result.c src/result/result.h
 tgt/vector.o : src/network/vector.c src/network/vector.h
 	$(CC) $(CCFLAGES) $< -o $@
 
-tgt/traindata.o : src/traindata/traindata.c src/traindata/traindata.h
+tgt/mnist.o : src/dataset/mnist.c src/dataset/mnist.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/train.o : src/dataset/train.c src/dataset/train.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/logger.o : src/logger/logger.c src/logger/logger.h
@@ -98,4 +98,4 @@ tgt/main.o : src/main.c
 	$(CC) $(CCFLAGES) $< -o $@
 
 SmileNetwork : $(OBJS)
-	$(CC) $(OBJS) -o $@ -lz -lm
+	$(CC) $(OBJS) -g -O0 -o $@ -lz -lm

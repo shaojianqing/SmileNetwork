@@ -7,6 +7,8 @@ struct Vector {
 
     int count;
 
+    void (*normalize)(Vector *this);
+
     Result* (*mul)(Vector *this, Vector *vector);
 
     Result* (*add)(Vector *this, Vector *vector);

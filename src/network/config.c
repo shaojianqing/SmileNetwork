@@ -5,7 +5,9 @@
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../random/random.h"
+#include "../memory/memory.h"
 #include "../result/result.h"
+#include "../dataset/train.h"
 #include "../file/file.h"
 #include "../json/json.h"
 
@@ -23,33 +25,63 @@ static Result* parseConfig(char *content);
 Result *loadNetworkConfig(char *filepath) {
     File *configFile = openFile(filepath, O_RDONLY);
     if (configFile == NULL) {
-        char *message = "config file open error for existence or permission reason^o^";
+        char *message = "config open network configuration file error for existence or permission reason^o^";
         createResultWithoutData(FILE_OPEN_ERROR, message);
     }
 
     Result *readResult = configFile->readCharString(configFile);
     if (!readResult->success(readResult)) {
+        closeFile(configFile);
         return readResult;
     }
     char *content = (char*)readResult->getData(readResult);
     releaseResult(readResult);
+    closeFile(configFile);
 
     Result *parseResult = parseConfig(content);
-    free(content);
+    release(content);
+    
     return parseResult;
 }
 
 static Result* parseConfig(char *content) {
-    NetworkConfig *networkConfig = (NetworkConfig *)malloc(sizeof(NetworkConfig));
+    NetworkConfig *networkConfig = (NetworkConfig *)allocate(sizeof(NetworkConfig));
     if (networkConfig == NULL) {
         char *message = "can not create network config instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     Json *configJson = parseJson(content);
+    Json *trainBatchSizeJson = getJsonObjectItem(configJson, "trainBatchSize");
+    if (trainBatchSizeJson == NULL) {
+        release(networkConfig);
+        deleteJson(configJson);
+        char *message = "there does not exist train batch size in the config file^o^";
+        return createResultWithoutData(CONFIG_NO_EXIST, message);
+    }
+    networkConfig->trainBatchSize = (int)getJsonNumberValue(trainBatchSizeJson);
+
+    Json *trainEpochCountJson = getJsonObjectItem(configJson, "trainEpochCount");
+    if (trainEpochCountJson == NULL) {
+        release(networkConfig);
+        deleteJson(configJson);
+        char *message = "there does not exist train epoch count in the config file^o^";
+        return createResultWithoutData(CONFIG_NO_EXIST, message);
+    }
+    networkConfig->trainEpochCount = (int)getJsonNumberValue(trainEpochCountJson);
+
+    Json *learnRateJson = getJsonObjectItem(configJson, "learnRateValue");
+    if (learnRateJson == NULL) {
+        release(networkConfig);
+        deleteJson(configJson);
+        char *message = "there does not exist learn rate config in the config file^o^";
+        return createResultWithoutData(CONFIG_NO_EXIST, message);
+    }
+    networkConfig->learnRateValue = (float)getJsonNumberValue(learnRateJson);
+    
     Json *inputConfigJson = getJsonObjectItem(configJson, "inputLayer");
     if (inputConfigJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist input layer configuration in the config file^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -59,7 +91,7 @@ static Result* parseConfig(char *content) {
     networkConfig->inputLayerConfig.activatorKind = RELU;
     Json *inputRowCountJson = getJsonObjectItem(inputConfigJson, "rowCount");
     if (inputRowCountJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist row count configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -68,7 +100,7 @@ static Result* parseConfig(char *content) {
 
     Json *inputColumnCountJson = getJsonObjectItem(inputConfigJson, "columnCount");
     if (inputColumnCountJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist column count configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -77,7 +109,7 @@ static Result* parseConfig(char *content) {
     
     Json *inputDimensionJson = getJsonObjectItem(inputConfigJson, "dimension");
     if (inputColumnCountJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist dimension configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -86,7 +118,7 @@ static Result* parseConfig(char *content) {
 
     Json *outputConfigJson = getJsonObjectItem(configJson, "outputLayer");
     if (outputConfigJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist output layer configuration in the config file^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -97,7 +129,7 @@ static Result* parseConfig(char *content) {
     networkConfig->outputLayerConfig.activatorLossKind = SOFTMAX_CEL;
     Json *outputRowCountJson = getJsonObjectItem(outputConfigJson, "rowCount");
     if (outputRowCountJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist row count configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -106,7 +138,7 @@ static Result* parseConfig(char *content) {
 
     Json *outputColumnCountJson = getJsonObjectItem(outputConfigJson, "columnCount");
     if (outputColumnCountJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist column count configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -115,7 +147,7 @@ static Result* parseConfig(char *content) {
 
     Json *outputDimensionJson = getJsonObjectItem(outputConfigJson, "dimension");
     if (outputDimensionJson == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist dimension configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -124,7 +156,7 @@ static Result* parseConfig(char *content) {
     
     Json *hiddenConfigJsonList = getJsonObjectItem(configJson, "hiddenLayers");
     if (hiddenConfigJsonList == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "there does not exist hidden layer configuration in config file^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -133,12 +165,12 @@ static Result* parseConfig(char *content) {
     int count = getJsonArraySize(hiddenConfigJsonList);
 
     networkConfig->hiddenLayerConfigCount = count;
-    networkConfig->hiddenLayerConfigList = (LayerConfig *)malloc(sizeof(LayerConfig)*count);
+    networkConfig->hiddenLayerConfigList = (LayerConfig *)allocate(sizeof(LayerConfig)*count);
     if (networkConfig->hiddenLayerConfigList == NULL) {
-        free(networkConfig);
+        release(networkConfig);
         deleteJson(configJson);
         char *message = "can not initialize hidden layer config list for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0;
@@ -148,7 +180,7 @@ static Result* parseConfig(char *content) {
         networkConfig->hiddenLayerConfigList[i].activatorKind = RELU;
         Json *hiddenRowCountJson = getJsonObjectItem(hiddenConfigJson, "rowCount");
         if (hiddenRowCountJson == NULL) {
-            free(networkConfig);
+            release(networkConfig);
             deleteJson(configJson);
             char *message = "there does not exist row count configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -157,7 +189,7 @@ static Result* parseConfig(char *content) {
 
         Json *hiddenColumnCountJson = getJsonObjectItem(hiddenConfigJson, "columnCount");
         if (hiddenColumnCountJson == NULL) {
-            free(networkConfig);
+            release(networkConfig);
             deleteJson(configJson);
             char *message = "there does not exist column count configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);
@@ -166,7 +198,7 @@ static Result* parseConfig(char *content) {
 
         Json *hiddenDimensionJson = getJsonObjectItem(hiddenConfigJson, "dimension");
         if (hiddenDimensionJson == NULL) {
-            free(networkConfig);
+            release(networkConfig);
             deleteJson(configJson);
             char *message = "there does not exist dimension configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);

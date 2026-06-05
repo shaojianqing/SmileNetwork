@@ -6,11 +6,13 @@
 #include "../common/constant.h"
 #include "../random/random.h"
 #include "../memory/memory.h"
+#include "../logger/logger.h"
 #include "../datatype/datatype.h"
 #include "../result/result.h"
 #include "../printer/printer.h"
 #include "../datatype/stringtype.h"
-#include "../traindata/traindata.h"
+#include "../dataset/mnist.h"
+#include "../dataset/train.h"
 #include "../network/config.h"
 #include "../network/activator.h"
 #include "../network/bias.h"
@@ -22,6 +24,8 @@
 
 #include "command.h"
 #include "executor.h"
+
+extern Logger logger;
 
 void loadConfigExecutor(Command *command) {
     String *name = command->name;
@@ -51,6 +55,7 @@ void loadModelExecutor(Command *command) {
     String *parameter = command->parameter;
 
     printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+    logger.info("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
 }
 
 void saveModelExecutor(Command *command) {
@@ -64,26 +69,64 @@ void showModelExecutor(Command *command) {
     String *name = command->name;
 
     printf("execute command[name:%s]\n", name->getValue(name));
+    logger.info("execute command[name:%s]", name->getValue(name));
 }
 
 void loadMnistDataExecutor(Command *command) {
     String *name = command->name;
     String *parameter = command->parameter;
 
-    printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+    bool success = loadMnistDataFromFile(parameter->getValue(parameter));
+    if (success) {
+        printMessage(WHITE, "Load mnist data successfully^+^");
+    } else {
+        printMessage(RED, "Load mnist data error, please check log for detail^o^");
+    }
 }
 
 void loadMnistLabelExecutor(Command *command) {
     String *name = command->name;
     String *parameter = command->parameter;
 
-    printf("execute command[name:%s]\n", name->getValue(name));
+    bool success = loadMnistLabelFromFile(parameter->getValue(parameter));
+    if (success) {
+        printMessage(WHITE, "Load mnist label successfully^+^");
+    } else {
+        printMessage(RED, "Load mnist label error, please check log for detail^o^");
+    }
 }
 
 void startTrainExecutor(Command *command) {
-    String *name = command->name;
+    NeuralNetwork *neuralNetwork = getNeuralNetwork();
+    if (neuralNetwork == NULL) {
+        printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
+        return;
+    }
 
-    printf("execute command[name:%s]\n", name->getValue(name));
+    int epoch = 0;
+    while (epoch < neuralNetwork->trainEpochCount) { 
+        Result *loadResult = loadTrainBatchStochastic(neuralNetwork->trainBatchSize);
+        if (!loadResult->success(loadResult)) {
+            printMessage(RED, loadResult->message);
+            releaseResult(loadResult);
+            return;
+        }
+
+        TrainBatch *trainBatch = (TrainBatch*)loadResult->getData(loadResult);
+        releaseResult(loadResult);
+
+        Result *trainResult = neuralNetwork->train(neuralNetwork, trainBatch);
+        if (trainResult->success(trainResult)) {
+            printMessage(WHITE, "Neural network has trained data with [epoch:%i]^+^", epoch);
+        } else {
+            printMessage(RED, trainResult->message);
+        }
+        releaseResult(trainResult);
+        releaseTrainBatch(trainBatch);
+
+        epoch++;
+    }
+    printMessage(WHITE, "Neural network has finished training in [epoch:%i]^+^", epoch);
 }
 
 void predictExecutor(Command *command) {
@@ -114,6 +157,16 @@ bool loadConfigRequireConfirm(Command *command) {
     } else {
         return false;
     }
+}
+
+bool loadMnistDataRequireConfirm(Command *command) {
+    printMessage(YELLOW, "Do you really want to load mnist train data from file[Yes|No]??");
+    return true;
+}
+
+bool loadMnistLabelRequireConfirm(Command *command) {
+    printMessage(YELLOW, "Do you really want to load mnist train label from file[Yes|No]??");
+    return true;
 }
 
 bool loadModelRequireConfirm(Command *command) {

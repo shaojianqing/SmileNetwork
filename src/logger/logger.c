@@ -1,10 +1,15 @@
 #include <time.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <stdarg.h>
+
+#include "../printer/printer.h"
 
 #include "logger.h"
 
 #define LOG_BUFFER_SIZE     256
+
+#define LOG_FILE_NAME      "LOG_FILE_NAME"
 
 #define DEBUG              "[DEBUG]"
 #define INFO               "[INFO]"
@@ -15,7 +20,7 @@ Logger logger;
 
 FILE *logFile = NULL;
 
-char *logFilepath = "~/logs/SmileNetwork.log";
+char *logFilepath = "/Users/shaojianqing/logs/SmileNetwork.log";
 
 static void debug(const char *format, ...);
 
@@ -29,7 +34,13 @@ static void log(const char *level, const char *message);
 
 void initLoggerConfig() {
 
-    logFile = fopen(logFilepath, "a");
+    char *logFilename = getenv(LOG_FILE_NAME);
+    if (logFilename == NULL) {
+        printMessage(RED, "log filename has not been set, please set it via environment variable^+^");
+        exit(0);
+    }
+
+    logFile = fopen(logFilename, "a");
     
     logger.debug = debug;
     logger.info = info;
@@ -82,5 +93,6 @@ static void log(const char *level, const char *message) {
 	char dateBuffer[32];
 	strftime(dateBuffer, sizeof(dateBuffer), "%Y-%m-%d %H:%M:%S", localtime(&now));
 
-    printf("%s %s %s.\n", dateBuffer, level, message);
+    fprintf(logFile, "%s %s %s\n", dateBuffer, level, message);
+    fflush(logFile);
 }

@@ -43,7 +43,7 @@ struct BaseLayer {
 
     Vector *resultVector;
 
-    Result* (*foreward)(BaseLayer *this, Vector *vector);
+    Result* (*forward)(BaseLayer *this, Vector *vector);
 
     Result* (*backward)(BaseLayer *this, Vector *target);
 

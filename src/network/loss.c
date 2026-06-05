@@ -81,12 +81,12 @@ static Result* softmaxCelLossFunc(Vector *source, Vector *target) {
     }
 
     Activator *activator = getActivator(SOFTMAX);
-    Vector *activated = activator->activate(source);
+    Vector *activateVector = activator->activate(source);
 
     float sum = 0.0;
     int i = 0;
-    for (i=0;i<activated->count;++i) {
-        float activateValue = activated->getValue(activated, i);
+    for (i=0;i<activateVector->count;++i) {
+        float activateValue = activateVector->getValue(activateVector, i);
         float targetValue = target->getValue(target, i);
         sum -= log(activateValue)*targetValue;
     }
@@ -107,7 +107,7 @@ static Result* equalMseGradientFunc(Vector *source, Vector *target) {
     Vector *gradient = createVector(source->count);
     if (gradient == NULL) {
         char *message = "can not create vector instance for equalMse gradient calculationr^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0;
@@ -134,7 +134,7 @@ static Result* softmaxCelGradientFunc(Vector *source, Vector *target) {
     Vector *gradient = createVector(source->count);
     if (gradient == NULL) {
         char *message = "can not create vector instance for softmaxCel gradient calculationr^o^";
-        return createResultWithoutData(MEMORY_ALLOCATE_ERROR, message);
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
     int i = 0;

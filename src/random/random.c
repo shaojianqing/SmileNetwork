@@ -6,9 +6,9 @@ void initRandomSeed() {
 }
 
 float biasGenerator() {
-    return rand()/RAND_MAX;
+    return (float)rand()/((float)RAND_MAX + 1.0f);
 }
 
 float matrixGenerator() {
-    return rand()/RAND_MAX;
+    return (float)rand()/((float)RAND_MAX + 1.0f);
 }

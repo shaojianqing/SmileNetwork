@@ -75,6 +75,9 @@ static Vector* sigmoidActivate(Vector *vector) {
 
 static Vector* softmaxActivate(Vector *vector) {
     if (vector != NULL) {
+
+        vector->normalize(vector);
+        
         int i = 0;
         float sum = 0.0;
         for (i=0;i<vector->count;++i) {
