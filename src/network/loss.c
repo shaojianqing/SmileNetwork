@@ -60,8 +60,7 @@ static Result* equalMseLossFunc(Vector *source, Vector *target) {
     Vector *activated = activator->activate(source);
 
     float sum = 0.0;
-    int i = 0;
-    for (i=0;i<activated->count;++i) {
+    for (int i=0;i<activated->count;++i) {
         float difference = activated->getValue(activated, i) - target->getValue(target, i);
         sum += difference*difference;
     }
@@ -84,8 +83,7 @@ static Result* softmaxCelLossFunc(Vector *source, Vector *target) {
     Vector *activateVector = activator->activate(source);
 
     float sum = 0.0;
-    int i = 0;
-    for (i=0;i<activateVector->count;++i) {
+    for (int i=0;i<activateVector->count;++i) {
         float activateValue = activateVector->getValue(activateVector, i);
         float targetValue = target->getValue(target, i);
         sum -= log(activateValue)*targetValue;
@@ -93,55 +91,53 @@ static Result* softmaxCelLossFunc(Vector *source, Vector *target) {
     return createResultWithValue(SUCCESS, NULL, sum);
 }
 
-static Result* equalMseGradientFunc(Vector *source, Vector *target) {
-    if (source == NULL || target == NULL) {
-        char *message = "source or target vector instance is null for equalMse gradient calculation^o^";
+static Result* equalMseGradientFunc(Vector *predict, Vector *target) {
+    if (predict == NULL || target == NULL) {
+        char *message = "predict or target vector instance is null for equalMse gradient calculation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (source->count != target->count) {
-        char *message = "source and target vector does not match for equalMse gradient calculation^o^";
+    if (predict->count != target->count) {
+        char *message = "predict and target vector does not match for equalMse gradient calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Vector *gradient = createVector(source->count);
+    Vector *gradient = createVector(predict->count);
     if (gradient == NULL) {
         char *message = "can not create vector instance for equalMse gradient calculationr^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0;
-    for (i=0;i<source->count;++i) {
-        float sourceValue = source->getValue(source, i);
+    for (int i=0;i<predict->count;++i) {
+        float predictValue = predict->getValue(predict, i);
         float targetValue = target->getValue(target, i);
-        float gradientValue = sourceValue - targetValue;
+        float gradientValue = predictValue - targetValue;
         gradient->setValue(gradient, i, gradientValue);
     }
     return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, gradient);
 }
 
-static Result* softmaxCelGradientFunc(Vector *source, Vector *target) {
-    if (source == NULL || target == NULL) {
-        char *message = "source or target vector instance is null for softmaxCel gradient calculation^o^";
+static Result* softmaxCelGradientFunc(Vector *predict, Vector *target) {
+    if (predict == NULL || target == NULL) {
+        char *message = "predict or target vector instance is null for softmaxCel gradient calculation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (source->count != target->count) {
-        char *message = "source and target vector does not match for softmaxCel gradient calculation^o^";
+    if (predict->count != target->count) {
+        char *message = "predict and target vector does not match for softmaxCel gradient calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Vector *gradient = createVector(source->count);
+    Vector *gradient = createVector(predict->count);
     if (gradient == NULL) {
         char *message = "can not create vector instance for softmaxCel gradient calculationr^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0;
-    for (i=0;i<source->count;++i) {
-        float sourceValue = source->getValue(source, i);
+    for (int i=0;i<predict->count;++i) {
+        float predictValue = predict->getValue(predict, i);
         float targetValue = target->getValue(target, i);
-        float gradientValue = sourceValue - targetValue;
+        float gradientValue = predictValue - targetValue;
         gradient->setValue(gradient, i, gradientValue);
     }
     return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, gradient);

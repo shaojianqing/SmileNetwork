@@ -20,8 +20,7 @@ void initMemoryConfig() {
 }
 
 void printAllocationTable() {
-    int i = 0;
-    for (i=0;i<allocationTable->capacity;++i) {
+    for (int i=0;i<allocationTable->capacity;++i) {
         Entry *entry = allocationTable->table[i];
         while (entry != NULL) {
             String *key = (String*)entry->key;

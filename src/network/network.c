@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
@@ -45,8 +46,7 @@ bool constructNeuralNetwork(NetworkConfig *config) {
             neuralNetwork->hiddenLayerCount = hiddenLayerCount;
             neuralNetwork->hiddenLayerList = (HiddenLayer **)allocate(hiddenLayerCount * sizeof(HiddenLayer*));
 
-            int i = 0;
-            for (i = 0;i<hiddenLayerCount;++i) {
+            for (int i=0;i<hiddenLayerCount;++i) {
                 LayerConfig hiddenLayerConfig = config->hiddenLayerConfigList[i];
                 neuralNetwork->hiddenLayerList[i] = buildHiddenLayer(hiddenLayerConfig);
             }
@@ -59,7 +59,7 @@ bool constructNeuralNetwork(NetworkConfig *config) {
             lastHiddenLayer->nextLayer = (BaseLayer*)neuralNetwork->outputLayer;
             ((BaseLayer*)neuralNetwork->outputLayer)->prevLayer = lastHiddenLayer;
 
-            for (i = 0;i<hiddenLayerCount;++i) {
+            for (int i=0;i<hiddenLayerCount;++i) {
                 if (i < hiddenLayerCount-1) {
                     BaseLayer *prevHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i];
                     BaseLayer *nextHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i+1];
@@ -99,8 +99,7 @@ static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
         return false;
     }
 
-    int i = 0;
-    for (i=0;i<neuralNetwork->hiddenLayerCount;++i) {
+    for (int i=0;i<neuralNetwork->hiddenLayerCount;++i) {
         HiddenLayer *hiddenLayer = neuralNetwork->hiddenLayerList[i];
         if (hiddenLayer == NULL) {
             logger.error("neural network hidden layer instance could not be constructed successfully^o^");
@@ -118,8 +117,8 @@ void releaseNeuralNetwork(NeuralNetwork *network) {
     if (network != NULL) {
         releaseInputLayer(network->inputLayer);
         releaseOutputLayer(network->outputLayer);
-        int i = 0;
-        for (i=0;i<network->hiddenLayerCount;++i) {
+
+        for (int i=0;i<network->hiddenLayerCount;++i) {
             releaseHiddenLayer(network->hiddenLayerList[i]);
         }
 
@@ -128,8 +127,8 @@ void releaseNeuralNetwork(NeuralNetwork *network) {
 }
 
 static Result* train(NeuralNetwork *this, TrainBatch *trainBatch) {
-    int i = 0;
-    for (i=0;i<trainBatch->dataCount;++i) {
+    Matrix *inputMatrix = this->inputLayer->baseLayer.modelMatrix;
+    for (int i=0;i<trainBatch->dataCount;++i) {
         TrainData trainData = trainBatch->dataList[i];
         Result *predictResult = predict(this, trainData.data);
         if (!predictResult->success(predictResult)) {
@@ -139,7 +138,6 @@ static Result* train(NeuralNetwork *this, TrainBatch *trainBatch) {
         releaseResult(predictResult);
 
         OutputLayer *outputLayer = this->outputLayer;
-
         Result *lossResult = outputLayer->loss(outputLayer, trainData.label);
         if (lossResult->success(lossResult)) {
             float lossValue = lossResult->getValue(lossResult);
@@ -152,6 +150,7 @@ static Result* train(NeuralNetwork *this, TrainBatch *trainBatch) {
             logger.error("network train with loss error[code:%d, message:%s]", lossResult->code, lossResult->message);
         }
     }
+
     return createResultWithoutData(SUCCESS, NULL);
 }
 

@@ -51,15 +51,14 @@ static void normalize(Vector *this) {
 
     if (this->count > 0) {
         float maxElement = this->elements[0];
-        int i = 0;
-        for (i=0;i<this->count;++i) {
+        for (int i=0;i<this->count;++i) {
             if (this->elements[i] > maxElement) {
                 maxElement = this->elements[i];
             }
         }
 
         if (maxElement != 0.0) {
-            for (i=0;i<this->count;++i) {
+            for (int i=0;i<this->count;++i) {
                 this->elements[i] = this->elements[i] / maxElement;
             }
         }
@@ -77,8 +76,7 @@ static Result* add(Vector *this, Vector *vector) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float thisValue = this->getValue(this, i);
         float vectorValue = vector->getValue(vector, i);
 
@@ -99,9 +97,8 @@ static Result* mul(Vector *this, Vector *vector) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
     float sum = 0.0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float thisValue = this->getValue(this, i);
         float vectorValue = vector->getValue(vector, i);
         sum += thisValue * vectorValue;
@@ -121,9 +118,8 @@ static Result* matrixMul(Vector *this, Vector *target) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0, j = 0;
-    for (i=0;i<this->count;++i) {
-        for (j=0;j<target->count;++j) {
+    for (int i=0;i<this->count;++i) {
+        for (int j=0;j<target->count;++j) {
             float thisValue = this->getValue(this, i);
             float targetValue = target->getValue(target, j);
             float resultValue = thisValue*targetValue;
@@ -145,8 +141,7 @@ static Result* addBias(Vector *this, Bias *bias) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float thisValue = this->getValue(this, i);
         float biasValue = bias->getValue(bias, i);
 
@@ -167,8 +162,7 @@ static Result* copy(Vector *this, Vector *target) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float thisValue = this->getValue(this, i);
         float targetValue = target->getValue(target, i);
 

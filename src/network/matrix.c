@@ -43,8 +43,8 @@ Matrix* createMatrix(int rowCount, int columnCount, Random random) {
         matrix->data = (float *)allocate(sizeof(float)*rowCount*columnCount);
 
         if (random != NULL) {
-            int i = 0, totalCount = rowCount*columnCount;
-            for (i=0;i<totalCount;++i) {
+            int totalCount = rowCount*columnCount;
+            for (int i=0;i<totalCount;++i) {
                 matrix->data[i] = random();
             }
         }
@@ -71,10 +71,9 @@ static Result* mulVector(Matrix *this, Vector *vector) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0, j = 0;
-    for (i=0;i<this->rowCount;++i) {
+    for (int i=0;i<this->rowCount;++i) {
         float sum = 0.0;
-        for (j=0;j<this->columnCount;++j) {
+        for (int j=0;j<this->columnCount;++j) {
             float matrixValue = getElementValue(this, i, j);
             float vectorValue = vector->getValue(vector, j);
             sum += matrixValue*vectorValue;
@@ -95,9 +94,8 @@ static Result* addMatrix(Matrix *this, Matrix *matrix) {
         return createResultWithoutData(MATRIX_NOT_MATCH, message);
     }
 
-    int i = 0, j = 0;
-    for (i=0;i<this->rowCount;++i) {
-        for (j=0;j<this->columnCount;++j) {
+    for (int i=0;i<this->rowCount;++i) {
+        for (int j=0;j<this->columnCount;++j) {
             float matrixValue = getElementValue(matrix, i, j);
             float thisValue = getElementValue(this, i, j);
 
@@ -119,9 +117,8 @@ static Result* subMatrix(Matrix *this, Matrix *matrix) {
         return createResultWithoutData(MATRIX_NOT_MATCH, message);
     }
 
-    int i = 0, j = 0;
-    for (i=0;i<this->rowCount;++i) {
-        for (j=0;j<this->columnCount;++j) {
+    for (int i=0;i<this->rowCount;++i) {
+        for (int j=0;j<this->columnCount;++j) {
             float matrixValue = getElementValue(matrix, i, j);
             float thisValue = getElementValue(this, i, j);
 
@@ -149,11 +146,10 @@ static Result* mulMatrix(Matrix *this, Matrix *matrix) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0, j = 0, k = 0;
-    for (k=0;k<matrix->columnCount;++k) {
-        for (i=0;i<this->rowCount;++i) {
+    for (int k=0;k<matrix->columnCount;++k) {
+        for (int i=0;i<this->rowCount;++i) {
             float sum = 0.0;
-            for (j=0;j<this->columnCount;++j) {
+            for (int j=0;j<this->columnCount;++j) {
                 float thisValue = getElementValue(this, i, j);
                 float matrixValue = getElementValue(this, j, k);
                 sum += thisValue*matrixValue;
@@ -166,9 +162,8 @@ static Result* mulMatrix(Matrix *this, Matrix *matrix) {
 
 static Result* mulNumber(Matrix *this, float number) {
     if (this != NULL) {
-        int i = 0, j = 0;
-        for (i=0;i<this->rowCount;++i) {
-            for (j=0;j<this->columnCount;++j) {
+        for (int i=0;i<this->rowCount;++i) {
+            for (int j=0;j<this->columnCount;++j) {
                 float value = getElementValue(this, i, j);
                 float newValue = value*number;
                 setElementValue(this, i, j, newValue);
@@ -192,9 +187,8 @@ static Result* transpose(Matrix *this) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0, j = 0;
-    for (i=0;i<this->rowCount;++i) {
-        for (j=0;j<this->columnCount;++j) {
+    for (int i=0;i<this->rowCount;++i) {
+        for (int j=0;j<this->columnCount;++j) {
             float value = getElementValue(this, i, j);
             transposeMatrix->setValue(transposeMatrix, j, i, value);
         }

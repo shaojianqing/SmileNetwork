@@ -31,8 +31,7 @@ Bias *createBias(int dimensionCount, Random random) {
         bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
 
         if (random != NULL) {
-            int i = 0;
-            for (i=0;i<dimensionCount;++i) {
+            for (int i=0;i<dimensionCount;++i) {
                 bias->elements[i] = random();
             }
         }
@@ -71,8 +70,7 @@ static Result* copy(Bias *this, Vector *vector) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float vectorValue = vector->getValue(vector, i);
         this->setValue(this, i, vectorValue);
     }
@@ -91,8 +89,7 @@ static Result* subBias(Bias *this, Bias *bias) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    for (int i=0;i<this->count;++i) {
         float thisValue = this->getValue(this, i);
         float biasValue = bias->getValue(bias, i);
 
@@ -108,8 +105,8 @@ static Result* mulNumber(Bias *this, float number) {
         char *message = "bias instance is null for multiplication operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
-    int i = 0;
-    for (i=0;i<this->count;++i) {
+    
+    for (int i=0;i<this->count;++i) {
         float value = this->getValue(this, i);
         float newValue = newValue*number;
         this->setValue(this, i, newValue);

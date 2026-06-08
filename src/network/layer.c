@@ -232,13 +232,11 @@ static Result* forwardInner(BaseLayer *this, Vector *vector) {
     }
     releaseResult(addBiasResult);
 
-    Vector *activateVector = activator->activate(innerVector);
+    this->resultVector = activator->activate(innerVector);
     if (this->nextLayer != NULL) {
         BaseLayer *nextLayer = this->nextLayer;
-        Result *finalResult = nextLayer->forward(nextLayer, activateVector);
-        return finalResult;
+        return nextLayer->forward(nextLayer, this->resultVector);
     } else {
-        this->resultVector = activateVector;
         return createResultWithoutData(SUCCESS, NULL);
     }
 }
@@ -301,10 +299,11 @@ static Result* backwardInner(BaseLayer *this, Vector *target) {
 
         Result *mulVectorResult = transposeMatrix->mulVector(transposeMatrix, gradientVector);
         releaseMatrix(transposeMatrix);
-
+        
         if (!mulVectorResult->success(mulVectorResult)) {
             return mulVectorResult;
         }
+
         Vector *prevGradientVector = (Vector*)mulVectorResult->getData(mulVectorResult);
         releaseResult(mulVectorResult);
 
@@ -401,6 +400,11 @@ static Result* optimizeInner(BaseLayer *this, float learnRate) {
         return result;
     }
     releaseResult(result);
-    
-    return createResultWithoutData(SUCCESS, NULL);
+
+    BaseLayer *prevLayer = this->prevLayer;
+    if (prevLayer != NULL) {
+        return prevLayer->optimize(prevLayer, learnRate);
+    } else {
+        return createResultWithoutData(SUCCESS, NULL);
+    }
 }

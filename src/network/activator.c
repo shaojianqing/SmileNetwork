@@ -63,8 +63,7 @@ Activator* getActivator(ActivatorKind kind) {
 
 static Vector* sigmoidActivate(Vector *vector) {
     if (vector != NULL) {
-        int i = 0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             float value = vector->getValue(vector, i);
             value = 1.0/(1.0 + exp(-value));
             vector->setValue(vector, i, value);
@@ -75,17 +74,15 @@ static Vector* sigmoidActivate(Vector *vector) {
 
 static Vector* softmaxActivate(Vector *vector) {
     if (vector != NULL) {
-
         vector->normalize(vector);
         
-        int i = 0;
         float sum = 0.0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             float value = vector->getValue(vector, i);
             sum += exp(value);
         }
 
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             float value = vector->getValue(vector, i);
             float item = exp(value)/sum;
             vector->setValue(vector, i, item);
@@ -100,8 +97,7 @@ static Vector* equalActivate(Vector *vector) {
 
 static Vector* reluActivate(Vector *vector) {
     if (vector != NULL) {
-        int i = 0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             if (vector->getValue(vector, i) < 0.0) {
                 vector->setValue(vector, i, 0);
             }
@@ -113,8 +109,7 @@ static Vector* reluActivate(Vector *vector) {
 static Vector* sigmoidDerivative(Vector *vector) {
     vector = sigmoidActivate(vector);
     if (vector != NULL) {
-        int i = 0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             float value = vector->getValue(vector, i);
             float result = value * (1.0 - value);
             vector->setValue(vector, i, result);
@@ -129,8 +124,7 @@ static Vector* softmaxDerivative(Vector *vector) {
 
 static Vector* equalDerivative(Vector *vector) {
     if (vector != NULL) {
-        int i = 0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             vector->setValue(vector, i, 1.0);
         }
     }
@@ -139,8 +133,7 @@ static Vector* equalDerivative(Vector *vector) {
 
 static Vector* reluDerivative(Vector *vector) {
     if (vector != NULL) {
-        int i = 0;
-        for (i=0;i<vector->count;++i) {
+        for (int i=0;i<vector->count;++i) {
             if (vector->getValue(vector, i) >= 0.0) {
                 vector->setValue(vector, i, 1.0);
             } else {

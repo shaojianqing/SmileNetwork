@@ -51,8 +51,7 @@ Result* loadTrainBatchStochastic(int batchSize) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int i = 0;
-    for (i=0;i<batchSize;++i) {
+    for (int i=0;i<batchSize;++i) {
         int randomIndex = rand()%trainBatch->dataCount;
         Vector *data = selectAndGenerateData(mnistData, randomIndex);
         Vector *label = selectAndGenerateLabel(mnistLabel, randomIndex);
@@ -70,8 +69,7 @@ static Vector* selectAndGenerateData(MnistData *mnistData, int index) {
     int dimensionCount = mnistData->rowCount*mnistData->columnCount;
     Vector *data = createVector(dimensionCount);
     if (data != NULL) {
-        int i = 0;
-        for (i=0;i<dimensionCount;++i) {
+        for (int i=0;i<dimensionCount;++i) {
             byte *buffer = mnistData->dataBuffer;
             byte valueByte = buffer[index * dimensionCount + i];
             float valueFloat = valueByte/BYTE_FLOAT_FACTOR;
@@ -85,8 +83,7 @@ static Vector* selectAndGenerateLabel(MnistLabel *mnistLabel, int index) {
     int dimensionCount = 10;
      Vector *label = createVector(dimensionCount);
      if (label != NULL) {
-        int i = 0;
-        for (i=0;i<dimensionCount;++i) {
+        for (int i=0;i<dimensionCount;++i) {
             int valueByte = mnistLabel->labelBuffer[index];
             if (i == valueByte) {
                 label->setValue(label, i, 1.0);

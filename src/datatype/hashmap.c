@@ -147,8 +147,7 @@ static int reHash(HashMap *this) {
 		Entry **newTable = malloc(sizeof(Entry *)*newCapacity);
 		memset(newTable, 0, sizeof(Entry *)*newCapacity);
 		if (newTable!=NULL) {
-			int i = 0;
-			for (i=0;i<oldCapacity;++i) {
+			for (int i=0;i<oldCapacity;++i) {
 				Entry *entry = oldTable[i];
 				Entry *nextEntry = NULL;
 				oldTable[i] = NULL;
