@@ -52,17 +52,24 @@ Result* loadTrainBatchStochastic(int batchSize) {
     }
 
     for (int i=0;i<batchSize;++i) {
-        int randomIndex = rand()%trainBatch->dataCount;
-        Vector *data = selectAndGenerateData(mnistData, randomIndex);
-        Vector *label = selectAndGenerateLabel(mnistLabel, randomIndex);
+        Vector *data = selectAndGenerateData(mnistData, i);
+        Vector *label = selectAndGenerateLabel(mnistLabel, i);
 
         setTrainData(trainBatch, i, data, label);
     }
     return createResultWithData(SUCCESS, NULL, TYPE_TRAIN_BATCH, trainBatch);
 }
 
-void releaseTrainBatch() {
-
+void releaseTrainBatch(TrainBatch *trainBatch) {
+    if (trainBatch != NULL) {
+        for (int i=0;i<trainBatch->dataCount;++i) {
+            TrainData trainData = trainBatch->dataList[i];
+            releaseVector(trainData.data);
+            releaseVector(trainData.label);
+        }
+        release(trainBatch->dataList);
+        release(trainBatch);
+    }
 }
 
 static Vector* selectAndGenerateData(MnistData *mnistData, int index) {

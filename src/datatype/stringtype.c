@@ -14,7 +14,7 @@
 
 static void bindFunction(String *this);
 
-static int getLength(String *this);
+static long getLength(String *this);
 
 static char* getValue(String *this);
 
@@ -27,7 +27,7 @@ String* createString(char *value) {
 		return NULL;
 	}
 
-	int length = strlen(value);
+	long length = strlen(value);
 	if (length == 0) {
 		return NULL;
 	}
@@ -74,7 +74,7 @@ static void bindFunction(String *this) {
 	}
 }
 
-static int getLength(String *this) {
+static long getLength(String *this) {
 	if (this != NULL) {
 		return this->length;
 	} else {
@@ -120,7 +120,7 @@ static String* catString(String *this, String *string) {
 			if (newString != NULL) {
 				bindFunction(newString);
 
-				int totalLength = this->length + string->length;
+                long totalLength = this->length + string->length;
 				char *newValue = malloc(totalLength + 1);
 				memcpy(newValue, this->value, this->length);
 				memcpy(newValue + this->length, string->value, string->length);

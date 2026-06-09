@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "../common/common.h"
@@ -9,8 +10,6 @@
 #include "vector.h"
 #include "matrix.h"
 
-static void normalize(Vector *this);
-
 static Result* add(Vector *this, Vector *vector);
 
 static Result* mul(Vector *this, Vector *vector);
@@ -19,11 +18,15 @@ static Result* addBias(Vector *this, Bias *bias);
 
 static Result* copy(Vector *this, Vector *target);
 
+static Result* mulHamd(Vector *this, Vector *vector);
+
 static Result* matrixMul(Vector *this, Vector *target);
 
 static float getValue(Vector *this, int index);
 
 static void setValue(Vector *this, int index, float value);
+
+static void printVector(Vector *this, char *message, int limit);
 
 Vector *createVector(int count) {
     Vector *vector = (Vector*)allocate(sizeof(Vector));
@@ -34,34 +37,22 @@ Vector *createVector(int count) {
         vector->add = add;
         vector->mul = mul;
         vector->addBias = addBias;
-        vector->normalize = normalize;
+        vector->mulHamd = mulHamd;
         vector->matrixMul = matrixMul;
 
         vector->copy = copy;
         vector->getValue = getValue;
         vector->setValue = setValue;
+
+        vector->printVector = printVector;
     }
     return vector;
 }
 
-static void normalize(Vector *this) {
-    if (this == NULL) {
-        return;
-    }
-
-    if (this->count > 0) {
-        float maxElement = this->elements[0];
-        for (int i=0;i<this->count;++i) {
-            if (this->elements[i] > maxElement) {
-                maxElement = this->elements[i];
-            }
-        }
-
-        if (maxElement != 0.0) {
-            for (int i=0;i<this->count;++i) {
-                this->elements[i] = this->elements[i] / maxElement;
-            }
-        }
+void releaseVector(Vector *this) {
+    if (this != NULL) {
+        //release(this->elements);
+        release(this);
     }
 }
 
@@ -104,6 +95,26 @@ static Result* mul(Vector *this, Vector *vector) {
         sum += thisValue * vectorValue;
     }
     return createResultWithValue(SUCCESS, NULL, sum);
+}
+
+static Result* mulHamd(Vector *this, Vector *vector) {
+    if (this == NULL || vector == NULL) {
+        char *message = "vector instance is null for multiplication operation^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
+    }
+
+    if (this->count != vector->count) {
+        char *message = "vector does not match for multiplication operation^o^";
+        return createResultWithoutData(VECTOR_NOT_MATCH, message);
+    }
+
+    for (int i=0;i<this->count;++i) {
+        float thisValue = this->elements[i];
+        float vectorValue = vector->elements[i];
+        this->elements[i] = thisValue * vectorValue;
+    }
+
+    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, this);
 }
 
 static Result* matrixMul(Vector *this, Vector *target) {
@@ -163,9 +174,7 @@ static Result* copy(Vector *this, Vector *target) {
     }
 
     for (int i=0;i<this->count;++i) {
-        float thisValue = this->getValue(this, i);
         float targetValue = target->getValue(target, i);
-
         this->setValue(this, i, targetValue);
     }
     return createResultWithoutData(SUCCESS, NULL);
@@ -181,5 +190,18 @@ static float getValue(Vector *this, int index) {
 static void setValue(Vector *this, int index, float value) {
     if (index<this->count) {
         this->elements[index] = value;
+    }
+}
+
+static void printVector(Vector *this, char *message, int limit) {
+    if (this != NULL) {
+
+        limit = this->count > limit?limit:this->count;
+        printf("%s", message);
+        printf("[");
+        for (int i=0;i<limit;++i) {
+            printf("%.2f, ", this->elements[i]);
+        }
+        printf("]\n");
     }
 }

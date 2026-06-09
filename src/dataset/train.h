@@ -20,4 +20,4 @@ struct TrainBatch {
 
 Result* loadTrainBatchStochastic(int batchSize);
 
-void releaseTrainBatch();
+void releaseTrainBatch(TrainBatch *trainBatch);

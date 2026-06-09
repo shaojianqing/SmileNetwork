@@ -2,11 +2,11 @@ typedef struct String String;
 
 struct String {
 	
-	int length;
+	long length;
 
 	char *value;
 
-	int (*getLength)(String *this);
+    long (*getLength)(String *this);
 
 	char* (*getValue)(String *this);
 

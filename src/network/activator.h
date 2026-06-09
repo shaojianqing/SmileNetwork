@@ -13,9 +13,9 @@ enum ActivatorKind {
 
 struct Activator {
 
-    Vector* (*activate)(Vector *vector);
+    Result* (*activate)(Vector *vector);
 
-    Vector* (*derivative)(Vector *vector);
+    Result* (*derivative)(Vector *vector);
 };
 
 void initActivatorMap();

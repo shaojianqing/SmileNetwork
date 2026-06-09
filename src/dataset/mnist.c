@@ -76,7 +76,7 @@ bool loadMnistDataFromFile(const char *filename) {
 
     long totalCount = imageCount*rowCount*columnCount;
 
-    mnistTrainData->dataBuffer = (byte*)allocate(totalCount);
+    mnistTrainData->dataBuffer = (byte*)allocate((int)totalCount);
     if (mnistTrainData->dataBuffer == NULL) {
         release(mnistTrainData);
         release(dataBuffer);

@@ -7,9 +7,9 @@ struct Vector {
 
     int count;
 
-    void (*normalize)(Vector *this);
-
     Result* (*mul)(Vector *this, Vector *vector);
+
+    Result* (*mulHamd)(Vector *this, Vector *vector);
 
     Result* (*add)(Vector *this, Vector *vector);
 
@@ -19,9 +19,13 @@ struct Vector {
 
     Result* (*matrixMul)(Vector *this, Vector *target);
 
+    void (*printVector)(Vector *this, char *message, int limit);
+
     float (*getValue)(Vector *this, int index);
 
     void (*setValue)(Vector *this, int index, float value);
 };
 
 Vector *createVector(int count);
+
+void releaseVector(Vector *this);

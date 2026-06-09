@@ -47,7 +47,7 @@ struct NeuralNetwork {
 
     int hiddenLayerCount;
 
-    Result* (*train)(NeuralNetwork *this, TrainBatch *trainBatch);
+    Result* (*train)(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
 
     Result* (*predict)(NeuralNetwork *this, Vector *vector);
 };

@@ -119,9 +119,9 @@ static Result* subMatrix(Matrix *this, Matrix *matrix) {
 
     for (int i=0;i<this->rowCount;++i) {
         for (int j=0;j<this->columnCount;++j) {
-            float matrixValue = getElementValue(matrix, i, j);
             float thisValue = getElementValue(this, i, j);
-
+            float matrixValue = getElementValue(matrix, i, j);
+            
             thisValue -= matrixValue;
             setElementValue(this, i, j, thisValue);
         }
@@ -151,7 +151,7 @@ static Result* mulMatrix(Matrix *this, Matrix *matrix) {
             float sum = 0.0;
             for (int j=0;j<this->columnCount;++j) {
                 float thisValue = getElementValue(this, i, j);
-                float matrixValue = getElementValue(this, j, k);
+                float matrixValue = getElementValue(matrix, j, k);
                 sum += thisValue*matrixValue;
                 setElementValue(resultMatrix, i, k, sum);
             }
@@ -161,18 +161,18 @@ static Result* mulMatrix(Matrix *this, Matrix *matrix) {
 }
 
 static Result* mulNumber(Matrix *this, float number) {
-    if (this != NULL) {
-        for (int i=0;i<this->rowCount;++i) {
-            for (int j=0;j<this->columnCount;++j) {
-                float value = getElementValue(this, i, j);
-                float newValue = value*number;
-                setElementValue(this, i, j, newValue);
-            }
-        }
-        return createResultWithoutData(SUCCESS, NULL);
+    if (this == NULL) {
+        char *message = "matrix instance is null for matrix number multiplication operation^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
-    char *message = "matrix instance is null^o^";
-    return createResultWithoutData(INSTANCE_IS_NULL, message);
+
+    for (int i=0;i<this->rowCount;++i) {
+        for (int j=0;j<this->columnCount;++j) {
+            float value = getElementValue(this, i, j);
+            setElementValue(this, i, j, value * number);
+        }
+    }
+    return createResultWithoutData(SUCCESS, NULL);
 }
 
 static Result* transpose(Matrix *this) {

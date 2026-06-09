@@ -10,13 +10,15 @@
 #include "vector.h"
 #include "loss.h"
 
-static Result* equalMseLossFunc(Vector *source, Vector *target);
+const float eps = 1e-7f;
 
-static Result* softmaxCelLossFunc(Vector *source, Vector *target);
+static Result* equalMseLossFunc(Vector *predict, Vector *target);
 
-static Result* equalMseGradientFunc(Vector *source, Vector *target);
+static Result* softmaxCelLossFunc(Vector *predict, Vector *target);
 
-static Result* softmaxCelGradientFunc(Vector *source, Vector *target);
+static Result* equalMseGradientFunc(Vector *predict, Vector *target);
+
+static Result* softmaxCelGradientFunc(Vector *predict, Vector *target);
 
 ActivatorLossFunc getActivatorLossFunc(ActivatorLossKind kind) {
     if (kind == EQUAL_MSE) {
@@ -45,48 +47,43 @@ Activator* getActivatorByActivatorLossKind(ActivatorLossKind kind) {
     return NULL;
 }
 
-static Result* equalMseLossFunc(Vector *source, Vector *target) {
-    if (source == NULL || target == NULL) {
+static Result* equalMseLossFunc(Vector *predict, Vector *target) {
+    if (predict == NULL || target == NULL) {
         char *message = "predict or expect vector instance is null for mse loss calculation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (source->count != target->count) {
+    if (predict->count != target->count) {
         char *message = "predict and expect vector does not match for mse loss calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Activator *activator = getActivator(EQUAL);
-    Vector *activated = activator->activate(source);
-
     float sum = 0.0;
-    for (int i=0;i<activated->count;++i) {
-        float difference = activated->getValue(activated, i) - target->getValue(target, i);
+    for (int i=0;i<predict->count;++i) {
+        float difference = predict->getValue(predict, i) - target->getValue(target, i);
         sum += difference*difference;
     }
-    sum /= (activated->count*2);
+    sum /= (predict->count*2);
     return createResultWithValue(SUCCESS, NULL, sum);
 }
 
-static Result* softmaxCelLossFunc(Vector *source, Vector *target) {
-    if (source == NULL || target == NULL) {
+static Result* softmaxCelLossFunc(Vector *predict, Vector *target) {
+    if (predict == NULL || target == NULL) {
         char *message = "predict or expect vector instance is null for mse loss calculation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (source->count != target->count) {
+    if (predict->count != target->count) {
         char *message = "predict and expect vector does not match for mse loss calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Activator *activator = getActivator(SOFTMAX);
-    Vector *activateVector = activator->activate(source);
-
     float sum = 0.0;
-    for (int i=0;i<activateVector->count;++i) {
-        float activateValue = activateVector->getValue(activateVector, i);
+    for (int i=0;i<predict->count;++i) {
+        float predictValue = predict->getValue(predict, i);
         float targetValue = target->getValue(target, i);
-        sum -= log(activateValue)*targetValue;
+        predictValue = fmaxf(predictValue, eps);
+        sum -= log(predictValue)*targetValue;
     }
     return createResultWithValue(SUCCESS, NULL, sum);
 }

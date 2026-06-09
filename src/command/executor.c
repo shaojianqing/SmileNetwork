@@ -115,7 +115,7 @@ void startTrainExecutor(Command *command) {
         TrainBatch *trainBatch = (TrainBatch*)loadResult->getData(loadResult);
         releaseResult(loadResult);
 
-        Result *trainResult = neuralNetwork->train(neuralNetwork, trainBatch);
+        Result *trainResult = neuralNetwork->train(neuralNetwork, trainBatch, epoch);
         if (trainResult->success(trainResult)) {
             printMessage(WHITE, "Neural network has trained data with [epoch:%i]^+^", epoch);
         } else {

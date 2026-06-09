@@ -43,13 +43,14 @@ Object* alloc(char *file, int line, int size) {
 }
 
 void release(Object* ptr) {
-
-    String *address = createStringWithFormat("%p", (Object *)ptr);
-    if (allocationTable->containsKey(allocationTable, address)) {
-        String *value = allocationTable->get(allocationTable, address);
-        allocationTable->remove(allocationTable, address);
-        releaseString(value);
+    if (ptr != NULL) {
+        String *address = createStringWithFormat("%p", (Object *)ptr);
+        if (allocationTable->containsKey(allocationTable, address)) {
+            String *value = allocationTable->get(allocationTable, address);
+            allocationTable->remove(allocationTable, address);
+            releaseString(value);
+        }
+        releaseString(address);
+        free(ptr);
     }
-    releaseString(address);
-    free(ptr);
 }

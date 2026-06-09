@@ -88,7 +88,7 @@ static Result* parseConfig(char *content) {
     }
 
     networkConfig->inputLayerConfig.isOutputLayer = false;
-    networkConfig->inputLayerConfig.activatorKind = EQUAL;
+    networkConfig->inputLayerConfig.activatorKind = RELU;
     Json *inputRowCountJson = getJsonObjectItem(inputConfigJson, "rowCount");
     if (inputRowCountJson == NULL) {
         release(networkConfig);
@@ -176,7 +176,7 @@ static Result* parseConfig(char *content) {
     for (int i=0;i<count;++i) {
         Json *hiddenConfigJson = getJsonArrayItem(hiddenConfigJsonList, i);
         networkConfig->hiddenLayerConfigList[i].isOutputLayer = false;
-        networkConfig->hiddenLayerConfigList[i].activatorKind = EQUAL;
+        networkConfig->hiddenLayerConfigList[i].activatorKind = RELU;
         Json *hiddenRowCountJson = getJsonObjectItem(hiddenConfigJson, "rowCount");
         if (hiddenRowCountJson == NULL) {
             release(networkConfig);

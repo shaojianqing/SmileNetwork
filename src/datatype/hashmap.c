@@ -16,8 +16,6 @@ static int getCount(HashMap *this);
 
 static int reHash(HashMap *this);
 
-static void printHashMap(HashMap *this);
-
 static int removeByKey(HashMap *this, Object *key);
 
 static bool containsKey(HashMap *this, Object *key);

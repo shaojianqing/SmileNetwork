@@ -24,7 +24,7 @@ static NeuralNetwork *neuralNetwork;
 
 static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork);
 
-static Result* train(NeuralNetwork *this, TrainBatch *trainBatch);
+static Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
 
 static Result* predict(NeuralNetwork *this, Vector *vector);
 
@@ -126,8 +126,7 @@ void releaseNeuralNetwork(NeuralNetwork *network) {
     }
 }
 
-static Result* train(NeuralNetwork *this, TrainBatch *trainBatch) {
-    Matrix *inputMatrix = this->inputLayer->baseLayer.modelMatrix;
+static Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
     for (int i=0;i<trainBatch->dataCount;++i) {
         TrainData trainData = trainBatch->dataList[i];
         Result *predictResult = predict(this, trainData.data);
@@ -141,7 +140,7 @@ static Result* train(NeuralNetwork *this, TrainBatch *trainBatch) {
         Result *lossResult = outputLayer->loss(outputLayer, trainData.label);
         if (lossResult->success(lossResult)) {
             float lossValue = lossResult->getValue(lossResult);
-            logger.info("network train with loss value:%.2f, train batch:%i", lossValue, i);
+            logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
 
             BaseLayer *baseLayer = (BaseLayer*)outputLayer;
             baseLayer->backward(baseLayer, trainData.label);

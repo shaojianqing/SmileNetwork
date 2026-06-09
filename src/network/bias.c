@@ -46,19 +46,6 @@ void releaseBias(Bias *this) {
     }
 }
 
-static float getValue(Bias *this, int index) {
-    if (index < this->count) {
-        return this->elements[index];
-    }
-    return 0.0;
-}
-
-static void setValue(Bias *this, int index, float value) {
-    if (index < this->count) {
-        this->elements[index] = value;
-    }
-}
-
 static Result* copy(Bias *this, Vector *vector) {
     if (this == NULL || vector == NULL) {
         char *message = "bias or vector instance is null for copy operation^o^";
@@ -105,11 +92,23 @@ static Result* mulNumber(Bias *this, float number) {
         char *message = "bias instance is null for multiplication operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
-    
+
     for (int i=0;i<this->count;++i) {
         float value = this->getValue(this, i);
-        float newValue = newValue*number;
-        this->setValue(this, i, newValue);
+        this->setValue(this, i, value * number);
     }
     return createResultWithoutData(SUCCESS, NULL);
+}
+
+static float getValue(Bias *this, int index) {
+    if (index < this->count) {
+        return this->elements[index];
+    }
+    return 0.0;
+}
+
+static void setValue(Bias *this, int index, float value) {
+    if (index < this->count) {
+        this->elements[index] = value;
+    }
 }

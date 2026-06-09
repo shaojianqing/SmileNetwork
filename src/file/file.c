@@ -74,24 +74,24 @@ static Result* readCharString(File *this) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-     int readSize = this->size;
-    char *string = (char *)allocate(readSize + 1);
+    long readSize = this->size;
+    char *string = (char *)allocate((int)readSize + 1);
     if (string == NULL) {
         char *message = "fail to read char string for memory allocation error^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int count = 0;
+    long count = 0;
     while (count < readSize) {
-       int num = read(this->fd, (string + count), (readSize - count));
-       if (num == 0) {
+        long num = read(this->fd, (string + count), (readSize - count));
+        if (num == 0) {
             break;
-       } else if (num < 0) {
+        } else if (num < 0) {
             release(string);
             char *message = "fail to read char string for file operation error^o^";
             return createResultWithoutData(FILE_READ_ERROR, message);
-       }
-       count += num;
+        }
+        count += num;
     }
 
     string[readSize] = '\0';
@@ -104,24 +104,24 @@ static Result* readByteBuffer(File *this) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-     int readSize = this->size;
-    byte *buffer = (byte *)allocate(readSize);
+    long readSize = this->size;
+    byte *buffer = (byte *)allocate((int)readSize);
     if (buffer == NULL) {
         char *message = "fail to read byte buffer for memory allocation error^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    int count = 0;
+    long count = 0;
     while (count < readSize) {
-       int num = read(this->fd, (buffer + count), (readSize - count));
-       if (num == 0) {
+        long num = read(this->fd, (buffer + count), (readSize - count));
+        if (num == 0) {
             break;
-       } else if (num < 0) {
+        } else if (num < 0) {
             release(buffer);
             char *message = "fail to read byte buffer for file operation error^o^";
             return createResultWithoutData(FILE_READ_ERROR, message);
-       }
-       count += num;
+        }
+        count += num;
     }
     
     return createResultWithData(SUCCESS, NULL, TYPE_BYTE_BUFFER, buffer);
