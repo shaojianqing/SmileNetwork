@@ -16,9 +16,40 @@
 #include "matrix.h"
 #include "vector.h"
 #include "loss.h"
-#include "layer.h"
-#include "network.h"
 #include "config.h"
+#include "layer.h"
+
+struct LayerConfig {
+
+    bool isOutputLayer;
+
+    int matrixRowCount;
+
+    int matrixColumnCount;
+
+    int biasDimensionCount;
+
+    ActivatorKind activatorKind;
+
+    ActivatorLossKind activatorLossKind;
+};
+
+struct NetworkConfig {
+
+    int trainBatchSize;
+
+    int trainEpochCount;
+
+    float learnRateValue;
+
+    int hiddenLayerConfigCount;
+
+    LayerConfig *inputLayerConfig;
+
+    LayerConfig *outputLayerConfig;
+
+    LayerConfig **hiddenLayerConfigList;
+};
 
 static Result* parseConfig(char *content);
 
@@ -29,12 +60,12 @@ Result *loadNetworkConfig(char *filepath) {
         createResultWithoutData(FILE_OPEN_ERROR, message);
     }
 
-    Result *readResult = configFile->readCharString(configFile);
-    if (!readResult->success(readResult)) {
+    Result *readResult = readCharString(configFile);
+    if (!success(readResult)) {
         closeFile(configFile);
         return readResult;
     }
-    char *content = (char*)readResult->getData(readResult);
+    char *content = (char*)getData(readResult);
     releaseResult(readResult);
     closeFile(configFile);
 
@@ -44,8 +75,39 @@ Result *loadNetworkConfig(char *filepath) {
     return parseResult;
 }
 
-static Result* parseConfig(char *content) {
+static NetworkConfig* createAndInitialize() {
     NetworkConfig *networkConfig = (NetworkConfig *)allocate(sizeof(NetworkConfig));
+    if (networkConfig == NULL) {
+        return NULL;
+    }
+
+    networkConfig->inputLayerConfig = (LayerConfig *)allocate(sizeof(LayerConfig));
+    if (networkConfig->inputLayerConfig == NULL) {
+        release(networkConfig);
+        return NULL;
+    }
+
+    networkConfig->outputLayerConfig = (LayerConfig *)allocate(sizeof(LayerConfig));
+    if (networkConfig->outputLayerConfig == NULL) {
+        release(networkConfig);
+        release(networkConfig->outputLayerConfig);
+        return NULL;
+    }
+
+    return networkConfig;
+}
+
+static NetworkConfig* initializeHiddenLayerConfig(NetworkConfig* config, int hiddenLayerCount) {
+    config->hiddenLayerConfigCount = hiddenLayerCount;
+    config->hiddenLayerConfigList = (LayerConfig**)allocate(sizeof(LayerConfig*) * hiddenLayerCount);
+    for (int i=0;i<hiddenLayerCount;++i) {
+        config->hiddenLayerConfigList[i] = (LayerConfig*)allocate(sizeof(LayerConfig));
+    }
+    return config;
+}
+
+static Result* parseConfig(char *content) {
+    NetworkConfig *networkConfig = createAndInitialize();
     if (networkConfig == NULL) {
         char *message = "can not create network config instance for memory allocation error^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
@@ -87,8 +149,8 @@ static Result* parseConfig(char *content) {
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
 
-    networkConfig->inputLayerConfig.isOutputLayer = false;
-    networkConfig->inputLayerConfig.activatorKind = RELU;
+    networkConfig->inputLayerConfig->isOutputLayer = false;
+    networkConfig->inputLayerConfig->activatorKind = RELU;
     Json *inputRowCountJson = getJsonObjectItem(inputConfigJson, "rowCount");
     if (inputRowCountJson == NULL) {
         release(networkConfig);
@@ -96,7 +158,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist row count configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->inputLayerConfig.matrixRowCount = (int)getJsonNumberValue(inputRowCountJson);
+    networkConfig->inputLayerConfig->matrixRowCount = (int)getJsonNumberValue(inputRowCountJson);
 
     Json *inputColumnCountJson = getJsonObjectItem(inputConfigJson, "columnCount");
     if (inputColumnCountJson == NULL) {
@@ -105,7 +167,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist column count configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->inputLayerConfig.matrixColumnCount = (int)getJsonNumberValue(inputColumnCountJson);
+    networkConfig->inputLayerConfig->matrixColumnCount = (int)getJsonNumberValue(inputColumnCountJson);
     
     Json *inputDimensionJson = getJsonObjectItem(inputConfigJson, "dimension");
     if (inputColumnCountJson == NULL) {
@@ -114,7 +176,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist dimension configuration in input layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->inputLayerConfig.biasDimensionCount = (int)getJsonNumberValue(inputDimensionJson);
+    networkConfig->inputLayerConfig->biasDimensionCount = (int)getJsonNumberValue(inputDimensionJson);
 
     Json *outputConfigJson = getJsonObjectItem(configJson, "outputLayer");
     if (outputConfigJson == NULL) {
@@ -124,9 +186,9 @@ static Result* parseConfig(char *content) {
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
 
-    networkConfig->outputLayerConfig.isOutputLayer = true;
-    networkConfig->outputLayerConfig.activatorKind = SOFTMAX;
-    networkConfig->outputLayerConfig.activatorLossKind = SOFTMAX_CEL;
+    networkConfig->outputLayerConfig->isOutputLayer = true;
+    networkConfig->outputLayerConfig->activatorKind = SOFTMAX;
+    networkConfig->outputLayerConfig->activatorLossKind = SOFTMAX_CEL;
     Json *outputRowCountJson = getJsonObjectItem(outputConfigJson, "rowCount");
     if (outputRowCountJson == NULL) {
         release(networkConfig);
@@ -134,7 +196,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist row count configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->outputLayerConfig.matrixRowCount = (int)getJsonNumberValue(outputRowCountJson);
+    networkConfig->outputLayerConfig->matrixRowCount = (int)getJsonNumberValue(outputRowCountJson);
 
     Json *outputColumnCountJson = getJsonObjectItem(outputConfigJson, "columnCount");
     if (outputColumnCountJson == NULL) {
@@ -143,7 +205,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist column count configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->outputLayerConfig.matrixColumnCount = (int)getJsonNumberValue(outputColumnCountJson);
+    networkConfig->outputLayerConfig->matrixColumnCount = (int)getJsonNumberValue(outputColumnCountJson);
 
     Json *outputDimensionJson = getJsonObjectItem(outputConfigJson, "dimension");
     if (outputDimensionJson == NULL) {
@@ -152,7 +214,7 @@ static Result* parseConfig(char *content) {
         char *message = "there does not exist dimension configuration in output layer configuration^o^";
         return createResultWithoutData(CONFIG_NO_EXIST, message);
     }
-    networkConfig->outputLayerConfig.biasDimensionCount = (int)getJsonNumberValue(outputDimensionJson);
+    networkConfig->outputLayerConfig->biasDimensionCount = (int)getJsonNumberValue(outputDimensionJson);
     
     Json *hiddenConfigJsonList = getJsonObjectItem(configJson, "hiddenLayers");
     if (hiddenConfigJsonList == NULL) {
@@ -164,8 +226,7 @@ static Result* parseConfig(char *content) {
 
     int count = getJsonArraySize(hiddenConfigJsonList);
 
-    networkConfig->hiddenLayerConfigCount = count;
-    networkConfig->hiddenLayerConfigList = (LayerConfig *)allocate(sizeof(LayerConfig)*count);
+    networkConfig = initializeHiddenLayerConfig(networkConfig, count);
     if (networkConfig->hiddenLayerConfigList == NULL) {
         release(networkConfig);
         deleteJson(configJson);
@@ -175,8 +236,8 @@ static Result* parseConfig(char *content) {
 
     for (int i=0;i<count;++i) {
         Json *hiddenConfigJson = getJsonArrayItem(hiddenConfigJsonList, i);
-        networkConfig->hiddenLayerConfigList[i].isOutputLayer = false;
-        networkConfig->hiddenLayerConfigList[i].activatorKind = RELU;
+        networkConfig->hiddenLayerConfigList[i]->isOutputLayer = false;
+        networkConfig->hiddenLayerConfigList[i]->activatorKind = RELU;
         Json *hiddenRowCountJson = getJsonObjectItem(hiddenConfigJson, "rowCount");
         if (hiddenRowCountJson == NULL) {
             release(networkConfig);
@@ -184,7 +245,7 @@ static Result* parseConfig(char *content) {
             char *message = "there does not exist row count configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);
         }
-        networkConfig->hiddenLayerConfigList[i].matrixRowCount = (int)getJsonNumberValue(hiddenRowCountJson);
+        networkConfig->hiddenLayerConfigList[i]->matrixRowCount = (int)getJsonNumberValue(hiddenRowCountJson);
 
         Json *hiddenColumnCountJson = getJsonObjectItem(hiddenConfigJson, "columnCount");
         if (hiddenColumnCountJson == NULL) {
@@ -193,7 +254,7 @@ static Result* parseConfig(char *content) {
             char *message = "there does not exist column count configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);
         }
-        networkConfig->hiddenLayerConfigList[i].matrixColumnCount = (int)getJsonNumberValue(hiddenColumnCountJson);
+        networkConfig->hiddenLayerConfigList[i]->matrixColumnCount = (int)getJsonNumberValue(hiddenColumnCountJson);
 
         Json *hiddenDimensionJson = getJsonObjectItem(hiddenConfigJson, "dimension");
         if (hiddenDimensionJson == NULL) {
@@ -202,9 +263,100 @@ static Result* parseConfig(char *content) {
             char *message = "there does not exist dimension configuration in hidden layer configuration^o^";
             return createResultWithoutData(CONFIG_NO_EXIST, message);
         }
-        networkConfig->hiddenLayerConfigList[i].biasDimensionCount = (int)getJsonNumberValue(hiddenDimensionJson);
+        networkConfig->hiddenLayerConfigList[i]->biasDimensionCount = (int)getJsonNumberValue(hiddenDimensionJson);
     }
 
     deleteJson(configJson);
     return createResultWithData(SUCCESS, NULL, TYPE_NETWORK_CONFIG, networkConfig);
+}
+
+int getTrainConfigBatchSize(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->trainBatchSize;
+    }
+    return 0;
+}
+
+int getTrainConfigEpochCount(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->trainEpochCount;
+    }
+    return 0;
+}
+
+float getLearnRateConfigValue(NetworkConfig *config) {
+        if (config != NULL) {
+        return config->learnRateValue;
+    }
+    return 0.0;
+}
+
+int getHiddenLayerConfigCount(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->hiddenLayerConfigCount;
+    }
+    return 0;
+}
+
+LayerConfig* getInputLayerConfig(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->inputLayerConfig;
+    }
+    return NULL;
+}
+
+LayerConfig* getOutputLayerConfig(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->outputLayerConfig;
+    }
+    return NULL;
+}
+
+LayerConfig** getHiddenLayerConfigList(NetworkConfig *config) {
+    if (config != NULL) {
+        return config->hiddenLayerConfigList;
+    }
+    return NULL;
+}
+
+bool isOutputLayer(LayerConfig *config) {
+    if (config != NULL) {
+        return config->isOutputLayer;
+    }
+    return false;
+}
+
+int getMatrixConfigRowCount(LayerConfig *config) {
+    if (config != NULL) {
+        return config->matrixRowCount;
+    }
+    return 0;
+}
+
+int getMatrixConfigColumnCount(LayerConfig *config) {
+    if (config != NULL) {
+        return config->matrixColumnCount;
+    }
+    return 0;
+}
+
+int getBiasConfigDimensionCount(LayerConfig *config) {
+    if (config != NULL) {
+        return config->biasDimensionCount;
+    }
+    return 0;
+}
+
+ActivatorKind getConfigActivatorKind(LayerConfig *config) {
+    if (config != NULL) {
+        return config->activatorKind;
+    }
+    return 0;
+}
+
+ActivatorLossKind getConfigActivatorLossKind(LayerConfig *config) {
+    if (config != NULL) {
+        return config->activatorLossKind;
+    }
+    return 0;
 }

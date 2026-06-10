@@ -13,6 +13,20 @@
 
 #define BYTE_FLOAT_FACTOR       256.0
 
+struct TrainData {
+
+    Vector *data;
+
+    Vector *label;
+};
+
+struct TrainBatch {
+
+    int dataCount;
+
+    TrainData *dataList;
+};
+
 static Vector* selectAndGenerateData(MnistData *mnistData, int index);
 
 static Vector* selectAndGenerateLabel(MnistLabel *mnistLabel, int index);
@@ -33,7 +47,7 @@ Result* loadTrainBatchStochastic(int batchSize) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (mnistData->imageCount != mnistLabel->labelCount) {
+    if (getImageCount(mnistData) != getLableCount(mnistLabel)) {
         char *message = "Mnist data and label count does not match, can not load train batch^o^";
         return createResultWithoutData(MNIST_NOT_MATCH, message);
     }
@@ -72,15 +86,45 @@ void releaseTrainBatch(TrainBatch *trainBatch) {
     }
 }
 
+int getTrainDataCount(TrainBatch *this) {
+    if (this != NULL) {
+        return this->dataCount;
+    }
+    return 0;
+}
+
+TrainData* getTrainData(TrainBatch *this, int index) {
+    if (this != NULL && index < this->dataCount) {
+        return &this->dataList[index];
+    }
+    return NULL;
+}
+
+Vector* getDataFroTrain(TrainData* this) {
+    if (this != NULL) {
+        return this->data;
+    }
+    return NULL;
+}
+
+Vector* getLabelFroTrain(TrainData* this) {
+    if (this != NULL) {
+        return this->label;
+    }
+    return NULL;
+}
+
 static Vector* selectAndGenerateData(MnistData *mnistData, int index) {
-    int dimensionCount = mnistData->rowCount*mnistData->columnCount;
+    int rowCount = getMnistRowCount(mnistData);
+    int columnCount = getMnistRowCount(mnistData);
+    int dimensionCount = rowCount * columnCount;
     Vector *data = createVector(dimensionCount);
     if (data != NULL) {
         for (int i=0;i<dimensionCount;++i) {
-            byte *buffer = mnistData->dataBuffer;
+            byte *buffer = getDataBuffer(mnistData);
             byte valueByte = buffer[index * dimensionCount + i];
             float valueFloat = valueByte/BYTE_FLOAT_FACTOR;
-            data->setValue(data, i, valueFloat);
+            setVectorValue(data, i, valueFloat);
         }
     }
     return data;
@@ -91,11 +135,11 @@ static Vector* selectAndGenerateLabel(MnistLabel *mnistLabel, int index) {
      Vector *label = createVector(dimensionCount);
      if (label != NULL) {
         for (int i=0;i<dimensionCount;++i) {
-            int valueByte = mnistLabel->labelBuffer[index];
+            int valueByte = getLabel(mnistLabel, index);
             if (i == valueByte) {
-                label->setValue(label, i, 1.0);
+                setVectorValue(label, i, 1.0);
             } else {
-                label->setValue(label, i, 0.0);
+                setVectorValue(label, i, 0.0);
             }
         }
      }

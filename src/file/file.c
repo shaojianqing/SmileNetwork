@@ -12,15 +12,14 @@
 
 #include "file.h"
 
+struct File {
+
+    int fd;
+
+    long long size;
+};
+
 extern Logger logger;
-
-static long long getFileSize(File *this);
-
-static Result* readCharString(File *this);
-
-static Result* readByteBuffer(File *this);
-
-static Result* writeByteBuffer(File *this, byte* buffer, long count);
 
 File* openFile(const char *filepath, int flags) {
     int fd = open(filepath, flags);
@@ -46,10 +45,6 @@ File* openFile(const char *filepath, int flags) {
 
     file->fd = fd;
     file->size = fileStat.st_size;
-    file->getFileSize = getFileSize;
-    file->readCharString = readCharString;
-    file->readByteBuffer = readByteBuffer;
-    file->writeByteBuffer = writeByteBuffer;
 
     return file;
 }
@@ -61,14 +56,14 @@ void closeFile(File *file) {
     }
 }
 
-static long long getFileSize(File *this) {
+long long getFileSize(File *this) {
     if (this == NULL) {
         return 0;
     }
     return this->size;
 }
 
-static Result* readCharString(File *this) {
+Result* readCharString(File *this) {
     if (this == NULL) {
         char *message = "file instance is null for reading char string operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
@@ -98,7 +93,7 @@ static Result* readCharString(File *this) {
     return createResultWithData(SUCCESS, NULL, TYPE_CHAR_BUFFER, string);
 }
 
-static Result* readByteBuffer(File *this) {
+Result* readByteBuffer(File *this) {
         if (this == NULL) {
         char *message = "file instance is null for reading byte buffer operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
@@ -127,6 +122,6 @@ static Result* readByteBuffer(File *this) {
     return createResultWithData(SUCCESS, NULL, TYPE_BYTE_BUFFER, buffer);
 }
 
-static Result* writeByteBuffer(File *this, byte* buffer, long count) {
+Result* writeByteBuffer(File *this, byte* buffer, long count) {
     return NULL;
 }

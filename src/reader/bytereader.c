@@ -9,13 +9,14 @@
 
 #include "bytereader.h"
 
-static byte readByte(ByteReader *this);
+struct ByteReader {
 
-static short readShort(ByteReader *this);
+    byte* buffer;
 
-static int readInteger(ByteReader *this);
+	long length;
 
-static void setPosition(ByteReader *this, long position);
+    long position;
+};
 
 ByteReader *createByteReader(byte* buffer, long length, long position) {
 	if (buffer!=NULL && length>0) {
@@ -24,34 +25,29 @@ ByteReader *createByteReader(byte* buffer, long length, long position) {
 			byteReader->buffer = buffer;
 			byteReader->length = length;
 			byteReader->position = position;
-
-			byteReader->readByte = readByte;
-			byteReader->readShort = readShort;
-			byteReader->readInteger = readInteger;
-            byteReader->setPosition = setPosition;
 		}
 		return byteReader;
 	}
 	return NULL;
 }
 
-static void setPosition(ByteReader *this, long position) {
+void setPosition(ByteReader *this, long position) {
 	this->position = position;
 }
 
-static byte readByte(ByteReader *this) {
+byte readByte(ByteReader *this) {
 	byte data = this->buffer[this->position];
 	this->position++;
 	return data;
 }
 
-static short readShort(ByteReader *this) {
+short readShort(ByteReader *this) {
 	byte data1 = readByte(this);
 	byte data2 = readByte(this);
 	return (data1 << 8) | data2;
 }
 
-static int readInteger(ByteReader *this) {
+int readInteger(ByteReader *this) {
 	byte data1 = readByte(this);
 	byte data2 = readByte(this);
 	byte data3 = readByte(this);

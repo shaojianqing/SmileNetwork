@@ -5,6 +5,30 @@
 
 #include "model.h"
 
+struct Header {
+
+    char magic[8];
+
+    int itemCount;
+
+    Item *itemList;
+};
+
+struct Item {
+
+};
+
+struct Body {
+    byte *data;
+};
+
+struct Model {
+
+    Header *header;
+
+    Body *body;
+};
+
 Model* loadModelFromFile(const char* filename) {
     return NULL;
 }

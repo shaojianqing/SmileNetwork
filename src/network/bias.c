@@ -8,27 +8,18 @@
 #include "bias.h"
 #include "vector.h"
 
-static float getValue(Bias *this, int index);
+struct Bias {
 
-static void setValue(Bias *this, int index, float value);
+    float *elements;
 
-static Result* copy(Bias *this, Vector *vector);
+    int count;
+};
 
-static Result* subBias(Bias *this, Bias *bias);
-
-static Result* mulNumber(Bias *this, float number);
-
-Bias *createBias(int dimensionCount, Random random) {
+Bias* createBias(int dimensionCount, Random random) {
     Bias *bias = (Bias*)allocate(sizeof(Bias));
     if (bias != NULL) {
-        bias->getValue = getValue;
-        bias->setValue = setValue;
-        bias->copy = copy;
-        bias->subBias = subBias;
-        bias->mulNumber = mulNumber;
-
-        bias->count = dimensionCount;
         bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
+        bias->count = dimensionCount;
 
         if (random != NULL) {
             for (int i=0;i<dimensionCount;++i) {
@@ -39,6 +30,13 @@ Bias *createBias(int dimensionCount, Random random) {
     return bias;
 }
 
+int getBiasElementCount(Bias *this) {
+    if (this != NULL) {
+        return this->count;
+    }
+    return 0;
+}
+
 void releaseBias(Bias *this) {
     if (this != NULL) {
         release(this->elements);
@@ -46,26 +44,25 @@ void releaseBias(Bias *this) {
     }
 }
 
-static Result* copy(Bias *this, Vector *vector) {
+Result* copyBias(Bias *this, Vector *vector) {
     if (this == NULL || vector == NULL) {
         char *message = "bias or vector instance is null for copy operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (this->count != vector->count) {
+    if (this->count != getElementCount(vector)) {
         char *message = "bias and vector does not match for copy operation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
     for (int i=0;i<this->count;++i) {
-        float vectorValue = vector->getValue(vector, i);
-        this->setValue(this, i, vectorValue);
+        float vectorValue = getVectorValue(vector, i);
+        setBiasValue(this, i, vectorValue);
     }
-
     return createResultWithoutData(SUCCESS, NULL);
 }
 
-static Result* subBias(Bias *this, Bias *bias) {
+Result* subBias(Bias *this, Bias *bias) {
     if (this == NULL || bias == NULL) {
         char *message = "bias instance is null for addition operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
@@ -77,37 +74,34 @@ static Result* subBias(Bias *this, Bias *bias) {
     }
 
     for (int i=0;i<this->count;++i) {
-        float thisValue = this->getValue(this, i);
-        float biasValue = bias->getValue(bias, i);
-
-        float resultValue = thisValue - biasValue;
-        this->setValue(this, i, resultValue);
+        float thisValue = this->elements[i];
+        float biasValue = bias->elements[i];
+        this->elements[i] = thisValue - biasValue;
     }
-
     return createResultWithoutData(SUCCESS, NULL);
 }
 
-static Result* mulNumber(Bias *this, float number) {
+Result* mulBiasNumber(Bias *this, float number) {
     if (this == NULL) {
         char *message = "bias instance is null for multiplication operation^o^";
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
     for (int i=0;i<this->count;++i) {
-        float value = this->getValue(this, i);
-        this->setValue(this, i, value * number);
+        float value = this->elements[i];
+        this->elements[i] = value * number;
     }
     return createResultWithoutData(SUCCESS, NULL);
 }
 
-static float getValue(Bias *this, int index) {
+float getBiasValue(Bias *this, int index) {
     if (index < this->count) {
         return this->elements[index];
     }
     return 0.0;
 }
 
-static void setValue(Bias *this, int index, float value) {
+void setBiasValue(Bias *this, int index, float value) {
     if (index < this->count) {
         this->elements[index] = value;
     }

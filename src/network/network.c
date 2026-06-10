@@ -18,54 +18,68 @@
 #include "layer.h"
 #include "network.h"
 
+struct NeuralNetwork {
+
+    int trainEpochCount;
+
+    int trainBatchSize;
+
+    float learnRateValue;
+
+    InputLayer *inputLayer;
+
+    OutputLayer *outputLayer;
+
+    HiddenLayer **hiddenLayerList;
+
+    int hiddenLayerCount;
+};
+
 extern Logger logger;
 
 static NeuralNetwork *neuralNetwork;
 
 static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork);
 
-static Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
-
-static Result* predict(NeuralNetwork *this, Vector *vector);
-
 bool constructNeuralNetwork(NetworkConfig *config) {
     neuralNetwork = (NeuralNetwork*)allocate(sizeof(NeuralNetwork));
     if (neuralNetwork != NULL) {
-        neuralNetwork->train = train;
-        neuralNetwork->predict = predict;
+        neuralNetwork->trainBatchSize = getTrainConfigBatchSize(config);
+        neuralNetwork->trainEpochCount = getTrainConfigEpochCount(config);
+        neuralNetwork->learnRateValue = getLearnRateConfigValue(config);
 
-        neuralNetwork->trainBatchSize = config->trainBatchSize;
-        neuralNetwork->trainEpochCount = config->trainEpochCount;
-        neuralNetwork->learnRateValue = config->learnRateValue;
+        LayerConfig *inputLayerConfig = getInputLayerConfig(config);
+        neuralNetwork->inputLayer = buildInputLayer(inputLayerConfig);
 
-        neuralNetwork->inputLayer = buildInputLayer(config->inputLayerConfig);
-        neuralNetwork->outputLayer = buildOutputLayer(config->outputLayerConfig);
+        LayerConfig *outputLayerConfig = getOutputLayerConfig(config);
+        neuralNetwork->outputLayer = buildOutputLayer(outputLayerConfig);
 
-        if (config->hiddenLayerConfigCount > 0) {
-            int hiddenLayerCount = config->hiddenLayerConfigCount;
+        int hiddenLayerCount = getHiddenLayerConfigCount(config);
+        if (hiddenLayerCount > 0) {
             neuralNetwork->hiddenLayerCount = hiddenLayerCount;
             neuralNetwork->hiddenLayerList = (HiddenLayer **)allocate(hiddenLayerCount * sizeof(HiddenLayer*));
 
+            LayerConfig **hiddenLayerConfigList = getHiddenLayerConfigList(config);
             for (int i=0;i<hiddenLayerCount;++i) {
-                LayerConfig hiddenLayerConfig = config->hiddenLayerConfigList[i];
+                LayerConfig *hiddenLayerConfig = hiddenLayerConfigList[i];
                 neuralNetwork->hiddenLayerList[i] = buildHiddenLayer(hiddenLayerConfig);
             }
 
             BaseLayer *firstHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[0];
-            firstHiddenLayer->prevLayer = (BaseLayer*)neuralNetwork->inputLayer;
-            ((BaseLayer*)neuralNetwork->inputLayer)->nextLayer = firstHiddenLayer;
+            setPrevLayer((BaseLayer*)firstHiddenLayer, (BaseLayer*)neuralNetwork->inputLayer);
+            setNextLayer((BaseLayer*)neuralNetwork->inputLayer, (BaseLayer*)firstHiddenLayer);
 
             BaseLayer *lastHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[hiddenLayerCount - 1];
-            lastHiddenLayer->nextLayer = (BaseLayer*)neuralNetwork->outputLayer;
-            ((BaseLayer*)neuralNetwork->outputLayer)->prevLayer = lastHiddenLayer;
+            setPrevLayer((BaseLayer*)neuralNetwork->outputLayer, (BaseLayer*)lastHiddenLayer);
+            setNextLayer((BaseLayer*)lastHiddenLayer, (BaseLayer*)neuralNetwork->outputLayer);
 
             for (int i=0;i<hiddenLayerCount;++i) {
                 if (i < hiddenLayerCount-1) {
                     BaseLayer *prevHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i];
                     BaseLayer *nextHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i+1];
 
-                    prevHiddenLayer->nextLayer = nextHiddenLayer;
-                    nextHiddenLayer->prevLayer = prevHiddenLayer;
+                    setNextLayer(prevHiddenLayer, nextHiddenLayer);
+                    setPrevLayer(nextHiddenLayer, prevHiddenLayer);
                 }
             }
         }
@@ -109,10 +123,6 @@ static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
     return true;
 }
 
-NeuralNetwork* getNeuralNetwork() {
-    return neuralNetwork;
-}
-
 void releaseNeuralNetwork(NeuralNetwork *network) {
     if (network != NULL) {
         releaseInputLayer(network->inputLayer);
@@ -121,45 +131,62 @@ void releaseNeuralNetwork(NeuralNetwork *network) {
         for (int i=0;i<network->hiddenLayerCount;++i) {
             releaseHiddenLayer(network->hiddenLayerList[i]);
         }
-
         release(network);
     }
 }
 
-static Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
-    for (int i=0;i<trainBatch->dataCount;++i) {
-        TrainData trainData = trainBatch->dataList[i];
-        Result *predictResult = predict(this, trainData.data);
-        if (!predictResult->success(predictResult)) {
-            logger.error("network train with error[code:%d, message:%s]", predictResult->code, predictResult->message);
+Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
+    int trainDataCount = getTrainDataCount(trainBatch);
+    for (int i=0;i<trainDataCount;++i) {
+        TrainData *trainData = getTrainData(trainBatch, i);
+        Result *predictResult = predict(this, getDataFroTrain(trainData));
+        if (!success(predictResult)) {
+            logger.error("network train with error[code:%d, message:%s]", getCode(predictResult), getMessage(predictResult));
             return predictResult;
         }
         releaseResult(predictResult);
 
         OutputLayer *outputLayer = this->outputLayer;
-        Result *lossResult = outputLayer->loss(outputLayer, trainData.label);
-        if (lossResult->success(lossResult)) {
-            float lossValue = lossResult->getValue(lossResult);
+        Result *lossResult = loss(outputLayer, getLabelFroTrain(trainData));
+        if (success(lossResult)) {
+            float lossValue = getValue(lossResult);
             logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
 
             BaseLayer *baseLayer = (BaseLayer*)outputLayer;
-            baseLayer->backward(baseLayer, trainData.label);
-            baseLayer->optimize(baseLayer, this->learnRateValue);
+            backward(baseLayer, getLabelFroTrain(trainData));
+            optimize(baseLayer, this->learnRateValue);
         } else {
-            logger.error("network train with loss error[code:%d, message:%s]", lossResult->code, lossResult->message);
+            logger.error("network train with loss error[code:%d, message:%s]", getCode(lossResult), getMessage(lossResult));
         }
     }
-
     return createResultWithoutData(SUCCESS, NULL);
 }
 
-static Result* predict(NeuralNetwork *this, Vector *vector) {
+Result* predict(NeuralNetwork *this, Vector *vector) {
     InputLayer *inputLayer = this->inputLayer;
     OutputLayer *outputLayer = this->outputLayer;
-    Result *inputResult = inputLayer->input(inputLayer, vector);
-    if (!inputResult->success(inputResult)) {
-        logger.error("network predict with error[code:%d, message:%s]", inputResult->code, inputResult->message);
+    Result *inputResult = input(inputLayer, vector);
+    if (!success(inputResult)) {
+        logger.error("network predict with error[code:%d, message:%s]", getCode(inputResult), getMessage(inputResult));
         return inputResult;
     }
-    return outputLayer->output(outputLayer);
+    return output(outputLayer);
+}
+
+int getTrainBatchSize(NeuralNetwork *this) {
+    if (this != NULL) {
+        return this->trainBatchSize;
+    }
+    return 0;
+}
+
+int getTrainEpochCount(NeuralNetwork *this) {
+    if (this != NULL) {
+        return this->trainEpochCount;
+    }
+    return 0;
+}
+
+NeuralNetwork* getNeuralNetwork() {
+    return neuralNetwork;
 }

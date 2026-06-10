@@ -25,25 +25,6 @@
 
 typedef struct Result Result;
 
-struct Result {
-
-    int code;
-
-    int type;
-
-    char *message;
-
-    Object *data;
-
-    float value;
-
-    bool (*success)(Result *this);
-
-    Object* (*getData)(Result *this);
-
-    float (*getValue)(Result *this);
-};
-
 Result* createResultWithData(int code, char *message, int type, Object *data);
 
 Result* createResultWithValue(int code, char *message, float value);
@@ -51,3 +32,15 @@ Result* createResultWithValue(int code, char *message, float value);
 Result* createResultWithoutData(int code, char *message);
 
 void releaseResult(Result* this);
+
+bool success(Result *this);
+
+int getCode(Result *this);
+
+char* getMessage(Result *this);
+
+int getType(Result *this);
+
+Object* getData(Result *this);
+
+float getValue(Result *this);

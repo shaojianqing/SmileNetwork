@@ -28,15 +28,16 @@
 extern Logger logger;
 
 void loadConfigExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
+    
     Result *result = loadNetworkConfig(parameter->getValue(parameter));
-    if (!result->success(result)) {
-        printMessage(RED, result->message);
+    if (!success(result)) {
+        printMessage(RED, getMessage(result));
         return;
     }
 
-    NetworkConfig *config = (NetworkConfig*)result->getData(result);
+    NetworkConfig *config = (NetworkConfig*)getData(result);
     NeuralNetwork *network = getNeuralNetwork();
     if (network != NULL) {
         releaseNeuralNetwork(network);
@@ -51,30 +52,30 @@ void loadConfigExecutor(Command *command) {
 }
 
 void loadModelExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
 
     printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
     logger.info("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
 }
 
 void saveModelExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
 
     printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
 }
 
 void showModelExecutor(Command *command) {
-    String *name = command->name;
+    String *name = getCommandName(command);
 
     printf("execute command[name:%s]\n", name->getValue(name));
     logger.info("execute command[name:%s]", name->getValue(name));
 }
 
 void loadMnistDataExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
 
     bool success = loadMnistDataFromFile(parameter->getValue(parameter));
     if (success) {
@@ -85,8 +86,8 @@ void loadMnistDataExecutor(Command *command) {
 }
 
 void loadMnistLabelExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
 
     bool success = loadMnistLabelFromFile(parameter->getValue(parameter));
     if (success) {
@@ -103,23 +104,24 @@ void startTrainExecutor(Command *command) {
         return;
     }
 
-    int epoch = 0;
-    while (epoch < neuralNetwork->trainEpochCount) { 
-        Result *loadResult = loadTrainBatchStochastic(neuralNetwork->trainBatchSize);
-        if (!loadResult->success(loadResult)) {
-            printMessage(RED, loadResult->message);
+    int epoch = 0, trainEpochCount = getTrainEpochCount(neuralNetwork);
+    while (epoch < trainEpochCount) { 
+        int trainBatchSize = getTrainBatchSize(neuralNetwork);
+        Result *loadResult = loadTrainBatchStochastic(trainBatchSize);
+        if (!success(loadResult)) {
+            printMessage(RED, getMessage(loadResult));
             releaseResult(loadResult);
             return;
         }
 
-        TrainBatch *trainBatch = (TrainBatch*)loadResult->getData(loadResult);
+        TrainBatch *trainBatch = (TrainBatch*)getData(loadResult);
         releaseResult(loadResult);
 
-        Result *trainResult = neuralNetwork->train(neuralNetwork, trainBatch, epoch);
-        if (trainResult->success(trainResult)) {
+        Result *trainResult = train(neuralNetwork, trainBatch, epoch);
+        if (success(trainResult)) {
             printMessage(WHITE, "Neural network has trained data with [epoch:%i]^+^", epoch);
         } else {
-            printMessage(RED, trainResult->message);
+            printMessage(RED, getMessage(trainResult));
         }
         releaseResult(trainResult);
         releaseTrainBatch(trainBatch);
@@ -130,8 +132,8 @@ void startTrainExecutor(Command *command) {
 }
 
 void predictExecutor(Command *command) {
-    String *name = command->name;
-    String *parameter = command->parameter;
+    String *name = getCommandName(command);
+    String *parameter = getCommandParam(command);
 
     printf("execute command[name:%s]\n", name->getValue(name));
 }

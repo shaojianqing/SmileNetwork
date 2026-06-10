@@ -5,9 +5,9 @@
 #include "../random/random.h"
 #include "../result/result.h"
 
-#include "activator.h"
 #include "bias.h"
 #include "vector.h"
+#include "activator.h"
 #include "loss.h"
 
 const float eps = 1e-7f;
@@ -53,17 +53,18 @@ static Result* equalMseLossFunc(Vector *predict, Vector *target) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (predict->count != target->count) {
+    if (getElementCount(predict) != getElementCount(target)) {
         char *message = "predict and expect vector does not match for mse loss calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
     float sum = 0.0;
-    for (int i=0;i<predict->count;++i) {
-        float difference = predict->getValue(predict, i) - target->getValue(target, i);
+    int predictCount = getElementCount(predict);
+    for (int i=0;i<predictCount;++i) {
+        float difference = getVectorValue(predict, i) - getVectorValue(target, i);
         sum += difference*difference;
     }
-    sum /= (predict->count*2);
+    sum /= (predictCount*2);
     return createResultWithValue(SUCCESS, NULL, sum);
 }
 
@@ -73,15 +74,16 @@ static Result* softmaxCelLossFunc(Vector *predict, Vector *target) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (predict->count != target->count) {
+    if (getElementCount(predict) != getElementCount(target)) {
         char *message = "predict and expect vector does not match for mse loss calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
     float sum = 0.0;
-    for (int i=0;i<predict->count;++i) {
-        float predictValue = predict->getValue(predict, i);
-        float targetValue = target->getValue(target, i);
+    int predictCount = getElementCount(predict);
+    for (int i=0;i<predictCount;++i) {
+        float predictValue = getVectorValue(predict, i);
+        float targetValue = getVectorValue(target, i);
         predictValue = fmaxf(predictValue, eps);
         sum -= log(predictValue)*targetValue;
     }
@@ -94,22 +96,24 @@ static Result* equalMseGradientFunc(Vector *predict, Vector *target) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (predict->count != target->count) {
+    if (getElementCount(predict) != getElementCount(target)) {
         char *message = "predict and target vector does not match for equalMse gradient calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Vector *gradient = createVector(predict->count);
+    int gradientCount = getElementCount(predict);
+    Vector *gradient = createVector(gradientCount);
     if (gradient == NULL) {
         char *message = "can not create vector instance for equalMse gradient calculationr^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    for (int i=0;i<predict->count;++i) {
-        float predictValue = predict->getValue(predict, i);
-        float targetValue = target->getValue(target, i);
+    int predictCount = getElementCount(predict);
+    for (int i=0;i<predictCount;++i) {
+        float predictValue = getVectorValue(predict, i);
+        float targetValue = getVectorValue(target, i);
         float gradientValue = predictValue - targetValue;
-        gradient->setValue(gradient, i, gradientValue);
+        setVectorValue(gradient, i, gradientValue);
     }
     return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, gradient);
 }
@@ -120,22 +124,24 @@ static Result* softmaxCelGradientFunc(Vector *predict, Vector *target) {
         return createResultWithoutData(INSTANCE_IS_NULL, message);
     }
 
-    if (predict->count != target->count) {
+    if (getElementCount(predict) != getElementCount(target)) {
         char *message = "predict and target vector does not match for softmaxCel gradient calculation^o^";
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
-    Vector *gradient = createVector(predict->count);
+    int gradientCount = getElementCount(predict);
+    Vector *gradient = createVector(gradientCount);
     if (gradient == NULL) {
         char *message = "can not create vector instance for softmaxCel gradient calculationr^o^";
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
-    for (int i=0;i<predict->count;++i) {
-        float predictValue = predict->getValue(predict, i);
-        float targetValue = target->getValue(target, i);
+    int predictCount = getElementCount(predict);
+    for (int i=0;i<predictCount;++i) {
+        float predictValue = getVectorValue(predict, i);
+        float targetValue = getVectorValue(target, i);
         float gradientValue = predictValue - targetValue;
-        gradient->setValue(gradient, i, gradientValue);
+        setVectorValue(gradient, i, gradientValue);
     }
     return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, gradient);
 }

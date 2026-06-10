@@ -64,6 +64,17 @@ struct Configuration {
     RequireConfirm requireConfirm;
 };
 
+struct Command {
+
+    String *name;
+
+    String *parameter;
+
+    Executor execute;
+
+    RequireConfirm requireConfirm;
+};
+
 static HashMap *commandConfigMap;
 
 static bool isCommandBlank(char *commandLine);
@@ -262,6 +273,20 @@ void runCommandEvent() {
     }
 }
 
+String* getCommandName(Command *this) {
+    if (this != NULL) {
+        return this->name;
+    }
+    return NULL;
+}
+
+String* getCommandParam(Command *this) {
+    if (this != NULL) {
+        return this->parameter;
+    }
+    return NULL;
+}
+
 void showNetworkInfo() {
     printMessage(CYAN, " ****  **** **** ****     *  ** **** **  ** *****     *     **       *  ** **** **** **       **  ****  *****  ** ** ");
     printMessage(CYAN, " ** ** **   **   ** **    ** ** **   **  ** **  **   ***    **       ** ** **   **** **   *   ** **  ** **  ** ****  ");
@@ -272,8 +297,9 @@ void showNetworkInfo() {
     printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "+ SmileNetwork is deep neural network implementation with C language. It implemnets the MLP architecture and could  +");
     printMessage(WHITE, "+ be configured as multi-layer neural network for image recognition usage. Please refer to the link for detail:     +");
-    printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork                                                                      +");
+    printMessage(WHITE, "+ https://github.com/shaojianqing/SmileNetwork [Enter showHelp for command help info]                               +");
     printMessage(WHITE, "+-------------------------------------------------------------------------------------------------------------------+");
+    printMessage(CYAN, "\n");
 }
 
 void showCommandInfo() {

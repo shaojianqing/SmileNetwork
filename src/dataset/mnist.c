@@ -14,6 +14,28 @@
 #define MNIST_DATA_MAGIC            2051
 #define MNIST_LABEL_MAGIC           2049
 
+struct MnistData {
+
+    int magic;
+
+    int imageCount;
+
+    int rowCount;
+
+    int columnCount;
+
+    byte *dataBuffer;
+};
+
+struct MnistLabel {
+
+    int magic;
+
+    int labelCount;
+
+    byte *labelBuffer;
+};
+
 extern Logger logger;
 
 static MnistData *mnistTrainData;
@@ -27,16 +49,16 @@ bool loadMnistDataFromFile(const char *filename) {
         return false;
     }
     
-    Result *readResult = mnistDataFile->readByteBuffer(mnistDataFile);
-    if (!readResult->success(readResult)) {
-        logger.error("read mnist data error, reason:%s", readResult->message);
+    Result *readResult = readByteBuffer(mnistDataFile);
+    if (!success(readResult)) {
+        logger.error("read mnist data error, reason:%s", getMessage(readResult));
         closeFile(mnistDataFile);
         releaseResult(readResult);
         return false;
     }
 
-    long bufferSize = mnistDataFile->getFileSize(mnistDataFile);
-    byte *dataBuffer = (byte*)readResult->getData(readResult);
+    long bufferSize = getFileSize(mnistDataFile);
+    byte *dataBuffer = (byte*)getData(readResult);
     releaseResult(readResult);
     closeFile(mnistDataFile);
 
@@ -47,10 +69,10 @@ bool loadMnistDataFromFile(const char *filename) {
         return false;
     }
 
-    int magic = byteReader->readInteger(byteReader);
-    int imageCount = byteReader->readInteger(byteReader);
-    int rowCount = byteReader->readInteger(byteReader);
-    int columnCount = byteReader->readInteger(byteReader);
+    int magic = readInteger(byteReader);
+    int imageCount = readInteger(byteReader);
+    int rowCount = readInteger(byteReader);
+    int columnCount = readInteger(byteReader);
 
     if (magic != MNIST_DATA_MAGIC) {
         release(dataBuffer);
@@ -100,16 +122,16 @@ bool loadMnistLabelFromFile(const char *filename) {
         return false;
     }
     
-    Result *readResult = mnistLabelFile->readByteBuffer(mnistLabelFile);
-    if (!readResult->success(readResult)) {
-        logger.error("read mnist label error, reason:%s", readResult->message);
+    Result *readResult = readByteBuffer(mnistLabelFile);
+    if (!success(readResult)) {
+        logger.error("read mnist label error, reason:%s", getMessage(readResult));
         closeFile(mnistLabelFile);
         releaseResult(readResult);
         return false;
     }
 
-    long bufferSize = mnistLabelFile->getFileSize(mnistLabelFile);
-    byte *dataBuffer = (byte*)readResult->getData(readResult);
+    long bufferSize = getFileSize(mnistLabelFile);
+    byte *dataBuffer = (byte*)getData(readResult);
     releaseResult(readResult);
     closeFile(mnistLabelFile);
 
@@ -120,8 +142,8 @@ bool loadMnistLabelFromFile(const char *filename) {
         return false;
     }
 
-    int magic = byteReader->readInteger(byteReader);
-    int labelCount = byteReader->readInteger(byteReader);
+    int magic = readInteger(byteReader);
+    int labelCount = readInteger(byteReader);
 
     if (magic != MNIST_LABEL_MAGIC) {
         release(dataBuffer);
@@ -164,4 +186,46 @@ MnistData* getMnistTrainData() {
 
 MnistLabel* getMnistTrainLabel() {
     return mnistTrainLabel;
+}
+
+int getImageCount(MnistData *mnistData) {
+    if (mnistData != NULL) {
+        return mnistData->imageCount;
+    }
+    return 0;
+}
+
+byte* getDataBuffer(MnistData *mnistData) {
+    if (mnistData != NULL) {
+        return mnistData->dataBuffer;
+    }
+    return NULL;
+}
+
+int getMnistRowCount(MnistData *mnistData) {
+    if (mnistData != NULL) {
+        return mnistData->rowCount;
+    }
+    return 0;
+}
+
+int getMnistColumnCount(MnistData *mnistData) {
+    if (mnistData != NULL) {
+        return mnistData->columnCount;
+    }
+    return 0;
+}
+
+int getLableCount(MnistLabel *mnistLabel) {
+    if (mnistLabel != NULL) {
+        return mnistLabel->labelCount;
+    }
+    return 0;
+}
+
+int getLabel(MnistLabel *mnistLabel, int index) {
+    if (mnistLabel != NULL && index < mnistLabel->labelCount) {
+        return mnistLabel->labelBuffer[index];
+    }
+    return 0;
 }
