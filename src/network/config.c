@@ -75,6 +75,19 @@ Result *loadNetworkConfig(char *filepath) {
     return parseResult;
 }
 
+void releaseNetworkConfig(NetworkConfig *config) {
+    if (config != NULL) {
+        for (int i=0;i<config->hiddenLayerConfigCount;++i) {
+            LayerConfig *hiddenLayerConfig = config->hiddenLayerConfigList[i];
+            release(hiddenLayerConfig);
+        }
+        release(config->inputLayerConfig);
+        release(config->outputLayerConfig);
+        release(config->hiddenLayerConfigList);
+        release(config);
+    }
+}
+
 static NetworkConfig* createAndInitialize() {
     NetworkConfig *networkConfig = (NetworkConfig *)allocate(sizeof(NetworkConfig));
     if (networkConfig == NULL) {

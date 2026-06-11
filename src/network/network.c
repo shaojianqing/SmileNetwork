@@ -141,23 +141,36 @@ Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
         TrainData *trainData = getTrainData(trainBatch, i);
         Result *predictResult = predict(this, getDataFroTrain(trainData));
         if (!success(predictResult)) {
-            logger.error("network train with error[code:%d, message:%s]", getCode(predictResult), getMessage(predictResult));
+            logger.error("network train predict phase with error[code:%d, message:%s]", getCode(predictResult), getMessage(predictResult));
             return predictResult;
         }
         releaseResult(predictResult);
 
         OutputLayer *outputLayer = this->outputLayer;
         Result *lossResult = loss(outputLayer, getLabelFroTrain(trainData));
-        if (success(lossResult)) {
-            float lossValue = getValue(lossResult);
-            logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
-
-            BaseLayer *baseLayer = (BaseLayer*)outputLayer;
-            backward(baseLayer, getLabelFroTrain(trainData));
-            optimize(baseLayer, this->learnRateValue);
-        } else {
+        if (!success(lossResult)) {
             logger.error("network train with loss error[code:%d, message:%s]", getCode(lossResult), getMessage(lossResult));
+            return lossResult;
+        } else {
+            float lossValue = getValue(lossResult);
+            releaseResult(lossResult);
+            logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
         }
+
+        BaseLayer *baseLayer = (BaseLayer*)outputLayer;
+        Result *backwardResult =  backward(baseLayer, getLabelFroTrain(trainData));
+        if (!success(backwardResult)) {
+            logger.error("network train backward phase with error[code:%d, message:%s]", getCode(backwardResult), getMessage(backwardResult));
+            return backwardResult;
+        }
+        releaseResult(backwardResult);
+
+        Result *optimizeResult = optimize(baseLayer, this->learnRateValue);
+        if (!success(optimizeResult)) {
+            logger.error("network train optimize phase with error[code:%d, message:%s]", getCode(optimizeResult), getMessage(optimizeResult));
+            return optimizeResult;
+        }
+        releaseResult(optimizeResult);
     }
     return createResultWithoutData(SUCCESS, NULL);
 }
@@ -170,6 +183,7 @@ Result* predict(NeuralNetwork *this, Vector *vector) {
         logger.error("network predict with error[code:%d, message:%s]", getCode(inputResult), getMessage(inputResult));
         return inputResult;
     }
+    releaseResult(inputResult);
     return output(outputLayer);
 }
 

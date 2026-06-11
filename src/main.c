@@ -16,7 +16,6 @@
 
 int main(int argc, char **argv) {
 
-    initMemoryConfig();
     initRandomSeed();
     initActivatorMap();
     initLoggerConfig();

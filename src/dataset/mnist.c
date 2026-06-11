@@ -75,18 +75,16 @@ bool loadMnistDataFromFile(const char *filename) {
     int columnCount = readInteger(byteReader);
 
     if (magic != MNIST_DATA_MAGIC) {
+        releaseByteReader(byteReader);
         release(dataBuffer);
-        release(byteReader);
-
         logger.error("mnist data file magic does not match, not legal mnist data file^o^");
         return false;
     }
 
     mnistTrainData = (MnistData*)allocate(sizeof(MnistData));
     if (mnistTrainData == NULL) {
+        releaseByteReader(byteReader);
         release(dataBuffer);
-        release(byteReader);
-        
         logger.error("create mnist data instance failure for memory allocation error^o^");
         return false;
     }
@@ -96,21 +94,19 @@ bool loadMnistDataFromFile(const char *filename) {
     mnistTrainData->rowCount = rowCount;
     mnistTrainData->columnCount = columnCount;
 
-    long totalCount = imageCount*rowCount*columnCount;
-
+    long totalCount = imageCount * rowCount * columnCount;
     mnistTrainData->dataBuffer = (byte*)allocate((int)totalCount);
     if (mnistTrainData->dataBuffer == NULL) {
+        releaseByteReader(byteReader);
         release(mnistTrainData);
         release(dataBuffer);
-        release(byteReader);
-
         logger.error("create mnist data buffer failure for memory allocation error^o^");
         return false;
     }
 
     memcpy(mnistTrainData->dataBuffer, (dataBuffer + 16), totalCount);
+    releaseByteReader(byteReader);
     release(dataBuffer);
-    release(byteReader);
 
     return true;
 }
@@ -146,18 +142,16 @@ bool loadMnistLabelFromFile(const char *filename) {
     int labelCount = readInteger(byteReader);
 
     if (magic != MNIST_LABEL_MAGIC) {
+        releaseByteReader(byteReader);
         release(dataBuffer);
-        release(byteReader);
-
         logger.error("mnist label file magic does not match, not legal mnist label file^o^");
         return false;
     }
 
     mnistTrainLabel = (MnistLabel*)allocate(sizeof(MnistLabel));
     if (mnistTrainLabel == NULL) {
+        releaseByteReader(byteReader);
         release(dataBuffer);
-        release(byteReader);
-        
         logger.error("create mnist label instance failure for memory allocation error^o^");
         return false;
     }
@@ -165,17 +159,16 @@ bool loadMnistLabelFromFile(const char *filename) {
     mnistTrainLabel->labelCount = labelCount;
     mnistTrainLabel->labelBuffer = (byte*)allocate(labelCount);
     if (mnistTrainLabel->labelBuffer == NULL) {
+        releaseByteReader(byteReader);
         release(mnistTrainLabel);
         release(dataBuffer);
-        release(byteReader);
-
         logger.error("create mnist label buffer failure for memory allocation error^o^");
         return false;
     }
 
     memcpy(mnistTrainLabel->labelBuffer, (dataBuffer + 8), labelCount);
+    releaseByteReader(byteReader);
     release(dataBuffer);
-    release(byteReader);
 
     return true;
 }

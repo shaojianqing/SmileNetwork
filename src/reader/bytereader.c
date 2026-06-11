@@ -31,6 +31,12 @@ ByteReader *createByteReader(byte* buffer, long length, long position) {
 	return NULL;
 }
 
+void releaseByteReader(ByteReader *byteReader) {
+	if (byteReader != NULL) {
+		release(byteReader);
+	}
+}
+
 void setPosition(ByteReader *this, long position) {
 	this->position = position;
 }

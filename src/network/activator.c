@@ -13,21 +13,21 @@
 #define RELU_FACTOR            0.01f
 
 
-static Result* sigmoidActivate(Vector *vector);
+static Result* sigmoidActivate(Vector *this);
 
-static Result* softmaxActivate(Vector *vector);
+static Result* softmaxActivate(Vector *this);
 
-static Result* equalActivate(Vector *vector);
+static Result* equalActivate(Vector *this);
 
-static Result* reluActivate(Vector *vector);
+static Result* reluActivate(Vector *this);
 
-static Result* sigmoidDerivative(Vector *vector);
+static Result* sigmoidDerivative(Vector *this);
 
-static Result* softmaxDerivative(Vector *vector);
+static Result* softmaxDerivative(Vector *this);
 
-static Result* reluDerivative(Vector *vector);
+static Result* reluDerivative(Vector *this);
 
-static Result* equalDerivative(Vector *vector);
+static Result* equalDerivative(Vector *this);
 
 static Activator sigmoidActivator;
 

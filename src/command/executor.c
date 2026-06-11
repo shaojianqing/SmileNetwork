@@ -34,16 +34,20 @@ void loadConfigExecutor(Command *command) {
     Result *result = loadNetworkConfig(parameter->getValue(parameter));
     if (!success(result)) {
         printMessage(RED, getMessage(result));
+        releaseResult(result);
         return;
     }
 
     NetworkConfig *config = (NetworkConfig*)getData(result);
+    releaseResult(result);
+
     NeuralNetwork *network = getNeuralNetwork();
     if (network != NULL) {
         releaseNeuralNetwork(network);
     }
 
     bool success = constructNeuralNetwork(config);
+    releaseNetworkConfig(config);
     if (success) {
         printMessage(WHITE, "Neural network has been constructed and initialized successfully^+^");
     } else {
@@ -140,10 +144,6 @@ void predictExecutor(Command *command) {
 
 void showHelpExecutor(Command *command) {
     showCommandInfo();
-}
-
-void printMemExecutor(Command *command) {
-    printAllocationTable();
 }
 
 void quitExecutor(Command *command) {

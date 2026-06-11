@@ -8,6 +8,8 @@ typedef enum ActivatorLossKind ActivatorLossKind;
 
 Result *loadNetworkConfig(char *filepath);
 
+void releaseNetworkConfig(NetworkConfig *config);
+
 int getTrainConfigBatchSize(NetworkConfig *config);
 
 int getTrainConfigEpochCount(NetworkConfig *config);

@@ -138,11 +138,6 @@ void initCommandConfig() {
     Configuration *showHelpConfiguration = buildConfiguration(showHelpName, showHelpDesc, false, showHelpExecutor, defaultRequireConfirm);
     commandConfigMap->put(commandConfigMap, showHelpName, showHelpConfiguration);
 
-    String *printMemName = createString(PRINT_MEM_NAME);
-    String *printMemDesc = createString(PRINT_MEM_DESC);
-    Configuration *printMemConfiguration = buildConfiguration(printMemName, printMemDesc, false, printMemExecutor, defaultRequireConfirm);
-    commandConfigMap->put(commandConfigMap, printMemName, printMemConfiguration);
-
     String *quitName = createString(QUIT_NAME);
     String *quitDesc = createString(QUIT_DESC);
     Configuration *quitConfiguration = buildConfiguration(quitName, quitDesc, false, quitExecutor, quitRequireConfirm);
@@ -157,21 +152,25 @@ static Command* parseCommand(char *commandLine) {
     char *commandName = (char *)allocate(COMMAND_NAME_BUFFER_SIZE);
     bool success = parseCommandElement(commandLine, commandName);
     if (!success) {
+        release(commandName);
         printMessage(RED, "Command name is illegal or invalid^o^");
         return NULL;
     }
     String *name = createString(commandName);
+    release(commandName);
     if (commandConfigMap->containsKey(commandConfigMap, name)) {
         Configuration *configuration = commandConfigMap->get(commandConfigMap, name);
         if (configuration->requireParameter) {
             char *commandParam = (char *)allocate(COMMAND_PARAM_BUFFER_SIZE);
             bool success = parseCommandElement(commandLine, commandParam);
             if (!success) {
+                release(commandParam);
                 printMessage(RED, "Command parameter is blank[%s]^o^", name->getValue(name));
                 return NULL;
             }
             
             String *parameter = createString(commandParam);
+            release(commandParam);
             return buildCommand(name, parameter, configuration->executor, configuration->requireConfirm);
         }
         return buildCommand(name, NULL, configuration->executor, configuration->requireConfirm);

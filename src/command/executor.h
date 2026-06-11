@@ -16,8 +16,6 @@ void predictExecutor(Command *command);
 
 void showHelpExecutor(Command *command);
 
-void printMemExecutor(Command *command);
-
 void quitExecutor(Command *command);
 
 

@@ -65,9 +65,11 @@ Result* loadTrainBatchStochastic(int batchSize) {
         return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
     }
 
+    int imageCount = getImageCount(mnistData);
     for (int i=0;i<batchSize;++i) {
-        Vector *data = selectAndGenerateData(mnistData, i);
-        Vector *label = selectAndGenerateLabel(mnistLabel, i);
+        int index = rand()%imageCount;
+        Vector *data = selectAndGenerateData(mnistData, index);
+        Vector *label = selectAndGenerateLabel(mnistLabel, index);
 
         setTrainData(trainBatch, i, data, label);
     }

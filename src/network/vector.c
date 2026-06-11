@@ -94,12 +94,18 @@ Result* mulHadamard(Vector *this, Vector *vector) {
         return createResultWithoutData(VECTOR_NOT_MATCH, message);
     }
 
+    Vector *resultVector = createVector(this->count);
+    if (resultVector == NULL) {
+        char *message = "can not create vector instance for memory allocation error^o^";
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+    }
+
     for (int i=0;i<this->count;++i) {
         float thisValue = this->elements[i];
         float vectorValue = vector->elements[i];
-        this->elements[i] = thisValue * vectorValue;
+        resultVector->elements[i] = thisValue * vectorValue;
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, this);
+    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, resultVector);
 }
 
 Result* mulMatrixVector(Vector *this, Matrix *matrix) {
