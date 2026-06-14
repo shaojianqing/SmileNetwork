@@ -142,6 +142,33 @@ void predictExecutor(Command *command) {
     printf("execute command[name:%s]\n", name->getValue(name));
 }
 
+void validateExecutor(Command *command) {
+    NeuralNetwork *neuralNetwork = getNeuralNetwork();
+    if (neuralNetwork == NULL) {
+        printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
+        return;
+    }
+
+    Result *loadResult = loadTrainBatchForValidate();
+    if (!success(loadResult)) {
+        printMessage(RED, getMessage(loadResult));
+        releaseResult(loadResult);
+        return;
+    }
+
+    TrainBatch *trainBatch = (TrainBatch*)getData(loadResult);
+    releaseResult(loadResult);
+
+    Result *validateResult = validate(neuralNetwork, trainBatch);
+     if (success(validateResult)) {
+        printMessage(WHITE, "Neural network has been validate successfully^+^");
+    } else {
+        printMessage(RED, getMessage(validateResult));
+    }
+    releaseResult(validateResult);
+    releaseTrainBatch(trainBatch);
+}
+
 void showHelpExecutor(Command *command) {
     showCommandInfo();
 }
@@ -162,12 +189,22 @@ bool loadConfigRequireConfirm(Command *command) {
 }
 
 bool loadMnistDataRequireConfirm(Command *command) {
-    printMessage(YELLOW, "Do you really want to load mnist train data from file[Yes|No]??");
+    MnistData *mnistData = getMnistTrainData();
+    if (mnistData == NULL) {
+        printMessage(YELLOW, "Do you really want to load mnist train data from file[Yes|No]??");
+    } else {
+        printMessage(YELLOW, "Do you really want to reload mnist train data and replace the current data instance[Yes|No]??");
+    }
     return true;
 }
 
 bool loadMnistLabelRequireConfirm(Command *command) {
-    printMessage(YELLOW, "Do you really want to load mnist train label from file[Yes|No]??");
+    MnistLabel *mnistLabel = getMnistTrainLabel();
+    if (mnistLabel == NULL) {
+        printMessage(YELLOW, "Do you really want to load mnist train label from file[Yes|No]??");
+    } else {
+        printMessage(YELLOW, "Do you really want to reload mnist train label and replace the current label instance[Yes|No]??");
+    }
     return true;
 }
 
@@ -184,6 +221,11 @@ bool saveModelRequireConfirm(Command *command) {
 bool startTrainRequireConfirm(Command *command) {
     printMessage(YELLOW, "Do you really want to start model training[Yes|No]??");
     return true;
+}
+
+bool validateRequireConfirm(Command *command) {
+    printMessage(YELLOW, "Do you really want to validate model[Yes|No]??");
+    return true;   
 }
 
 bool quitRequireConfirm(Command *command) {

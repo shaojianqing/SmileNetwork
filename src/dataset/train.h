@@ -6,12 +6,14 @@ typedef struct TrainBatch TrainBatch;
 
 Result* loadTrainBatchStochastic(int batchSize);
 
+Result* loadTrainBatchForValidate();
+
 void releaseTrainBatch(TrainBatch *trainBatch);
 
 int getTrainDataCount(TrainBatch *this);
 
 TrainData* getTrainData(TrainBatch *this, int index);
 
-Vector* getDataFroTrain(TrainData* this);
+Vector* getDataForTrain(TrainData* this);
 
-Vector* getLabelFroTrain(TrainData* this);
+Vector* getLabelForTrain(TrainData* this);

@@ -81,6 +81,11 @@ bool loadMnistDataFromFile(const char *filename) {
         return false;
     }
 
+    // if mnistTrainData has been assigned, need to release it before reloading another mnist data file.
+    if (mnistTrainData != NULL) {
+        releaseMnistData(mnistTrainData);
+    }
+
     mnistTrainData = (MnistData*)allocate(sizeof(MnistData));
     if (mnistTrainData == NULL) {
         releaseByteReader(byteReader);
@@ -148,6 +153,11 @@ bool loadMnistLabelFromFile(const char *filename) {
         return false;
     }
 
+    // if mnistTrainLabel has been assigned, need to release it before reloading another mnist label file.
+    if (mnistTrainLabel != NULL) {
+        releaseMnistLabel(mnistTrainLabel);
+    }
+
     mnistTrainLabel = (MnistLabel*)allocate(sizeof(MnistLabel));
     if (mnistTrainLabel == NULL) {
         releaseByteReader(byteReader);
@@ -179,6 +189,20 @@ MnistData* getMnistTrainData() {
 
 MnistLabel* getMnistTrainLabel() {
     return mnistTrainLabel;
+}
+
+void releaseMnistData(MnistData *mnistData) {
+    if (mnistData != NULL) {
+        release(mnistData->dataBuffer);
+        release(mnistData);
+    }
+}
+
+void releaseMnistLabel(MnistLabel *mnistLabel) {
+    if (mnistLabel != NULL) {
+        release(mnistLabel->labelBuffer);
+        release(mnistLabel);
+    }
 }
 
 int getImageCount(MnistData *mnistData) {

@@ -14,6 +14,8 @@ void startTrainExecutor(Command *command);
 
 void predictExecutor(Command *command);
 
+void validateExecutor(Command *command);
+
 void showHelpExecutor(Command *command);
 
 void quitExecutor(Command *command);
@@ -30,5 +32,7 @@ bool loadMnistLabelRequireConfirm(Command *command);
 bool saveModelRequireConfirm(Command *command);
 
 bool startTrainRequireConfirm(Command *command);
+
+bool validateRequireConfirm(Command *command);
 
 bool quitRequireConfirm(Command *command);

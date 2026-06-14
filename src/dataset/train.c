@@ -76,6 +76,53 @@ Result* loadTrainBatchStochastic(int batchSize) {
     return createResultWithData(SUCCESS, NULL, TYPE_TRAIN_BATCH, trainBatch);
 }
 
+Result* loadTrainBatchForValidate() {
+    MnistData *mnistData = getMnistTrainData();
+    MnistLabel *mnistLabel = getMnistTrainLabel();
+
+    if (mnistData == NULL) {
+        char *message = "Mnist data is not loaded ready to load train batch^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
+    }
+
+    if (mnistLabel == NULL) {
+        char *message = "Mnist label is not loaded ready to load train batch^o^";
+        return createResultWithoutData(INSTANCE_IS_NULL, message);
+    }
+
+    if (getImageCount(mnistData) != 10000) {
+        char *message = "Mnist label is loaded but not for test or validation^o^";
+        return createResultWithoutData(MNIST_NOT_MATCH, message);
+    }
+
+    if (getImageCount(mnistData) != getLableCount(mnistLabel)) {
+        char *message = "Mnist data and label count does not match, can not load train batch^o^";
+        return createResultWithoutData(MNIST_NOT_MATCH, message);
+    }
+
+    TrainBatch *trainBatch = (TrainBatch*)allocate(sizeof(TrainBatch));
+    if (trainBatch == NULL) {
+        char *message = "Can not create train batch instance for memory allocation error^o^";
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+    }
+
+    int totalDataCount = getImageCount(mnistData);
+    trainBatch->dataCount = totalDataCount;
+    trainBatch->dataList = (TrainData*)allocate(totalDataCount*sizeof(TrainData));
+    if (trainBatch->dataList == NULL) {
+        char *message = "Can not allocate train batch datalist for memory allocation error^o^";
+        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+    }
+
+    for (int i=0;i<totalDataCount;++i) {
+        Vector *data = selectAndGenerateData(mnistData, i);
+        Vector *label = selectAndGenerateLabel(mnistLabel, i);
+
+        setTrainData(trainBatch, i, data, label);
+    }
+    return createResultWithData(SUCCESS, NULL, TYPE_TRAIN_BATCH, trainBatch);
+}
+
 void releaseTrainBatch(TrainBatch *trainBatch) {
     if (trainBatch != NULL) {
         for (int i=0;i<trainBatch->dataCount;++i) {
@@ -102,14 +149,14 @@ TrainData* getTrainData(TrainBatch *this, int index) {
     return NULL;
 }
 
-Vector* getDataFroTrain(TrainData* this) {
+Vector* getDataForTrain(TrainData* this) {
     if (this != NULL) {
         return this->data;
     }
     return NULL;
 }
 
-Vector* getLabelFroTrain(TrainData* this) {
+Vector* getLabelForTrain(TrainData* this) {
     if (this != NULL) {
         return this->label;
     }

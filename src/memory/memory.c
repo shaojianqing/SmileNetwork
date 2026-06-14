@@ -8,6 +8,9 @@
 
 Object* alloc(char *file, int line, int size) {
     Object *ptr = malloc(size);
+    if (ptr != NULL) {
+        memset(ptr, size, 1);
+    }
     return ptr;
 }
 

@@ -33,8 +33,8 @@
 #define LOAD_MNIST_LABEL_NAME           "loadMnistLabel"
 #define START_TRAIN_NAME                "startTrain"
 #define PREDICT_NAME                    "predict"
+#define VALIDATE_NAME                   "validate"
 #define SHOW_HELP_NAME                  "showHelp"
-#define PRINT_MEM_NAME                  "printMemTable"
 #define QUIT_NAME                       "quit"
 
 #define LOAD_CONFIG_DESC                "loadConfig"
@@ -45,8 +45,8 @@
 #define LOAD_MNIST_LABEL_DESC           "loadMnistLabel"
 #define START_TRAIN_DESC                "startTrain"
 #define PREDICT_DESC                    "predict"
+#define VALIDATE_DESC                   "validate"
 #define SHOW_HELP_DESC                  "showHelp"
-#define PRINT_MEM_DESC                  "printMemTable"
 #define QUIT_DESC                       "quit"
 
 typedef struct Configuration Configuration;
@@ -76,6 +76,14 @@ struct Command {
 };
 
 static HashMap *commandConfigMap;
+
+static char commandBuffer[COMMAND_BUFFER_SIZE];
+
+static char commandName[COMMAND_NAME_BUFFER_SIZE];
+
+static char commandParam[COMMAND_PARAM_BUFFER_SIZE];
+
+static void resetDataBuffer(char *databuffer, int size);
 
 static bool isCommandBlank(char *commandLine);
 
@@ -128,6 +136,11 @@ void initCommandConfig() {
     Configuration *startTrainConfiguration = buildConfiguration(startTrainName, startTrainDesc, false, startTrainExecutor, startTrainRequireConfirm);
     commandConfigMap->put(commandConfigMap, startTrainName, startTrainConfiguration);
 
+    String *validateName = createString(VALIDATE_NAME);
+    String *validateDesc = createString(VALIDATE_DESC);
+    Configuration *validateConfiguration = buildConfiguration(validateName, validateDesc, false, validateExecutor, validateRequireConfirm);
+    commandConfigMap->put(commandConfigMap, validateName, validateConfiguration);
+
     String *predictName = createString(PREDICT_NAME);
     String *predictDesc = createString(PREDICT_DESC);
     Configuration *predictConfiguration = buildConfiguration(predictName, predictDesc, true, predictExecutor, defaultRequireConfirm);
@@ -149,28 +162,24 @@ static Command* parseCommand(char *commandLine) {
         return NULL;
     }
 
-    char *commandName = (char *)allocate(COMMAND_NAME_BUFFER_SIZE);
+    resetDataBuffer(commandName, COMMAND_NAME_BUFFER_SIZE);
     bool success = parseCommandElement(commandLine, commandName);
     if (!success) {
-        release(commandName);
         printMessage(RED, "Command name is illegal or invalid^o^");
         return NULL;
     }
     String *name = createString(commandName);
-    release(commandName);
     if (commandConfigMap->containsKey(commandConfigMap, name)) {
         Configuration *configuration = commandConfigMap->get(commandConfigMap, name);
         if (configuration->requireParameter) {
-            char *commandParam = (char *)allocate(COMMAND_PARAM_BUFFER_SIZE);
+            resetDataBuffer(commandParam, COMMAND_PARAM_BUFFER_SIZE);
             bool success = parseCommandElement(commandLine, commandParam);
             if (!success) {
-                release(commandParam);
                 printMessage(RED, "Command parameter is blank[%s]^o^", name->getValue(name));
                 return NULL;
             }
             
             String *parameter = createString(commandParam);
-            release(commandParam);
             return buildCommand(name, parameter, configuration->executor, configuration->requireConfirm);
         }
         return buildCommand(name, NULL, configuration->executor, configuration->requireConfirm);
@@ -220,21 +229,18 @@ static void releaseCommand(Command *command) {
     if (command != NULL) {
         releaseString(command->name);
         releaseString(command->parameter);
-
         release(command);
     }
 }
 
 void runCommandEvent() {
-
     Command *currentCommand = NULL;
     bool commandRequireConfirm = false;
-    char *commandBuffer = (char *)allocate(COMMAND_BUFFER_SIZE);
     while(true) {
         if (!commandRequireConfirm) {
             printMessage(GREEN, "Please enter command here^+^");
         }
-        
+        resetDataBuffer(commandBuffer, COMMAND_BUFFER_SIZE);
         fgets(commandBuffer, COMMAND_BUFFER_SIZE, stdin);
         commandBuffer[strcspn(commandBuffer, "\n")] = 0;
         if (commandRequireConfirm) {
@@ -320,6 +326,8 @@ void showCommandInfo() {
     printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "+ startTrain        + start to train model with loaded data and label. It is called after train data is loaded.     +");
     printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
+    printMessage(WHITE, "+ validate          + validate model with model data and model label. It could be called only after trained.        +");
+    printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "+ predict           + predict model label with model data by the trained model. It is called only after trained.    +");
     printMessage(WHITE, "+-------------------+-----------------------------------------------------------------------------------------------+");
     printMessage(WHITE, "+ showHelp          + show command help information list just as above content.                                     +");
@@ -350,6 +358,7 @@ static bool parseCommandElement(char *commandLine, char *commandElement) {
             j++;
         }
     }
+    commandElement[j] = '\0';
     return parsed;
 }
 
@@ -370,4 +379,10 @@ static bool isCommandBlank(char *commandLine) {
 
 static bool defaultRequireConfirm(Command *command) {
     return false;
+}
+
+static void resetDataBuffer(char *databuffer, int size) {
+    for (int i=0;i<size;++i) {
+        databuffer[i] = '\0';
+    }
 }

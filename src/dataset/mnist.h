@@ -10,6 +10,10 @@ MnistData* getMnistTrainData();
 
 MnistLabel* getMnistTrainLabel();
 
+void releaseMnistData(MnistData *mnistData);
+
+void releaseMnistLabel(MnistLabel *mnistLabel);
+
 int getImageCount(MnistData *mnistData);
 
 byte* getDataBuffer(MnistData *mnistData);
