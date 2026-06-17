@@ -13,6 +13,7 @@
 #include "vector.h"
 #include "activator.h"
 #include "matrix.h"
+#include "optimizer.h"
 #include "loss.h"
 #include "layer.h"
 
@@ -36,6 +37,8 @@ struct BaseLayer {
 
     Vector *resultVector;
 
+    Optimizer optimizer;
+
     Result* (*forward)(BaseLayer *this, Vector *vector);
 
     Result* (*backward)(BaseLayer *this, Vector *target);
@@ -57,7 +60,7 @@ struct OutputLayer {
     ActivatorGradientFunc activatorGradientFunc;
 };
 
-struct HiddenLayer {
+struct LinearLayer {
 
     BaseLayer baseLayer;
 };
@@ -84,6 +87,7 @@ InputLayer* buildInputLayer(LayerConfig *config) {
         BaseLayer *baseLayer = (BaseLayer*)inputLayer;
         baseLayer->backward = backwardInner;
         baseLayer->optimize = optimizeInner;
+        baseLayer->optimizer = SGDOptimizer;
         bool success = prepareBaselayer(baseLayer, config);
         if (!success) {
             releaseInputLayer(inputLayer);
@@ -100,6 +104,7 @@ OutputLayer* buildOutputLayer(LayerConfig *config) {
         baseLayer->forward = forwardOutput;
         baseLayer->backward = backwardOutput;
         baseLayer->optimize = optimizeInner;
+        baseLayer->optimizer = SGDOptimizer;
         bool success = prepareBaselayer(baseLayer, config);
         if (!success) {
             releaseOutputLayer(outputLayer);
@@ -139,20 +144,21 @@ OutputLayer* buildOutputLayer(LayerConfig *config) {
     return outputLayer;
 }
 
-HiddenLayer* buildHiddenLayer(LayerConfig *config) {
-    HiddenLayer *hiddenLayer = (HiddenLayer*)allocate(sizeof(HiddenLayer));
-    if (hiddenLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
+LinearLayer* buildLinearLayer(LayerConfig *config) {
+    LinearLayer *linearLayer = (LinearLayer*)allocate(sizeof(LinearLayer));
+    if (linearLayer != NULL) {
+        BaseLayer *baseLayer = (BaseLayer*)linearLayer;
         baseLayer->forward = forwardInner;
         baseLayer->backward = backwardInner;
         baseLayer->optimize = optimizeInner;
+        baseLayer->optimizer = SGDOptimizer;
         bool success = prepareBaselayer(baseLayer, config);
         if (!success) {
-            releaseHiddenLayer(hiddenLayer);
+            releaseLinearLayer(linearLayer);
             return NULL;
         }
     }
-    return hiddenLayer;
+    return linearLayer;
 }
 
 static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
@@ -202,11 +208,11 @@ void releaseOutputLayer(OutputLayer *outputLayer) {
     }
 }
 
-void releaseHiddenLayer(HiddenLayer *hiddenLayer) {
-    if (hiddenLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)hiddenLayer;
+void releaseLinearLayer(LinearLayer *linearLayer) {
+    if (linearLayer != NULL) {
+        BaseLayer *baseLayer = (BaseLayer*)linearLayer;
         releaseBaselayer(baseLayer);
-        release(hiddenLayer);
+        release(linearLayer);
     }
 }
 
@@ -449,34 +455,18 @@ static Result* backwardOutput(BaseLayer *this, Vector *target) {
 }
 
 static Result* optimizeInner(BaseLayer *this, float learnRate) {
-    Matrix *gradientMatrix = this->gradientMatrix;
-    Result *result = mulMatrixNumber(gradientMatrix, learnRate);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
-
+    Bias *modelBias = this->modelBias;
     Matrix *modelMatrix = this->modelMatrix;
-    result = subMatrix(modelMatrix, gradientMatrix);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
 
     Bias *gradientBias = this->gradientBias;
-    result = mulBiasNumber(gradientBias, learnRate);
+    Matrix *gradientMatrix = this->gradientMatrix;
+
+    Result *result = this->optimizer(modelMatrix, modelBias, gradientMatrix, gradientBias, learnRate);
     if (!success(result)) {
         return result;
     }
     releaseResult(result);
-
-    Bias *modelBias = this->modelBias;
-    result = subBias(modelBias, gradientBias);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
-
+    
     releaseBias(this->gradientBias);
     releaseMatrix(this->gradientMatrix);
 

@@ -4,19 +4,19 @@ typedef struct InputLayer InputLayer;
 
 typedef struct OutputLayer OutputLayer;
 
-typedef struct HiddenLayer HiddenLayer;
+typedef struct LinearLayer LinearLayer;
 
 InputLayer* buildInputLayer(LayerConfig *config);
 
 OutputLayer* buildOutputLayer(LayerConfig *config);
 
-HiddenLayer* buildHiddenLayer(LayerConfig *config);
+LinearLayer* buildLinearLayer(LayerConfig *config);
 
 void releaseInputLayer(InputLayer *inputLayer);
 
 void releaseOutputLayer(OutputLayer *outputLayer);
 
-void releaseHiddenLayer(HiddenLayer *hiddenLayer);
+void releaseLinearLayer(LinearLayer *linearLayer);
 
 Result* forward(BaseLayer *this, Vector *vector);
 

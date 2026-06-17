@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/bytereader.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/mnist.o tgt/train.o
+OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/bytereader.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/optimizer.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/mnist.o tgt/train.o
 
 .PHONY : build clean
 
@@ -59,6 +59,9 @@ tgt/network.o : src/network/network.c src/network/network.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/activator.o : src/network/activator.c src/network/activator.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/optimizer.o : src/network/optimizer.c src/network/optimizer.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/layer.o : src/network/layer.c src/network/layer.h

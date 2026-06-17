@@ -30,7 +30,7 @@ struct NeuralNetwork {
 
     OutputLayer *outputLayer;
 
-    HiddenLayer **hiddenLayerList;
+    LinearLayer **hiddenLayerList;
 
     int hiddenLayerCount;
 };
@@ -59,12 +59,12 @@ bool constructNeuralNetwork(NetworkConfig *config) {
         int hiddenLayerCount = getHiddenLayerConfigCount(config);
         if (hiddenLayerCount > 0) {
             neuralNetwork->hiddenLayerCount = hiddenLayerCount;
-            neuralNetwork->hiddenLayerList = (HiddenLayer **)allocate(hiddenLayerCount * sizeof(HiddenLayer*));
+            neuralNetwork->hiddenLayerList = (LinearLayer **)allocate(hiddenLayerCount * sizeof(LinearLayer*));
 
             LayerConfig **hiddenLayerConfigList = getHiddenLayerConfigList(config);
             for (int i=0;i<hiddenLayerCount;++i) {
                 LayerConfig *hiddenLayerConfig = hiddenLayerConfigList[i];
-                neuralNetwork->hiddenLayerList[i] = buildHiddenLayer(hiddenLayerConfig);
+                neuralNetwork->hiddenLayerList[i] = buildLinearLayer(hiddenLayerConfig);
             }
 
             BaseLayer *firstHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[0];
@@ -215,7 +215,7 @@ static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
     }
 
     for (int i=0;i<neuralNetwork->hiddenLayerCount;++i) {
-        HiddenLayer *hiddenLayer = neuralNetwork->hiddenLayerList[i];
+        LinearLayer *hiddenLayer = neuralNetwork->hiddenLayerList[i];
         if (hiddenLayer == NULL) {
             logger.error("neural network hidden layer instance could not be constructed successfully^o^");
             return false;
@@ -230,7 +230,7 @@ void releaseNeuralNetwork(NeuralNetwork *network) {
         releaseOutputLayer(network->outputLayer);
 
         for (int i=0;i<network->hiddenLayerCount;++i) {
-            releaseHiddenLayer(network->hiddenLayerList[i]);
+            releaseLinearLayer(network->hiddenLayerList[i]);
         }
         release(network);
     }
