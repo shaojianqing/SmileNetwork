@@ -2,57 +2,30 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
-#include "../result/result.h"
 #include "../random/random.h"
 
 #include "bias.h"
 #include "matrix.h"
 #include "optimizer.h"
 
-Result* SGDOptimizer(Matrix *modelMatrix, Bias *modelBias, 
+void SGDOptimizer(Matrix *modelMatrix, Bias *modelBias, 
                      Matrix *gradientMatrix, Bias *gradientBias, float learnRate) {
 
-    Result *result = mulMatrixNumber(gradientMatrix, learnRate);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
+    mulMatrixNumber(gradientMatrix, learnRate);
+    subMatrix(modelMatrix, gradientMatrix);
 
-    
-    result = subMatrix(modelMatrix, gradientMatrix);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
-
-    ;
-    result = mulBiasNumber(gradientBias, learnRate);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
-
-    
-    result = subBias(modelBias, gradientBias);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
-
-    return createResultWithoutData(SUCCESS, NULL);
+    mulBiasNumber(gradientBias, learnRate);
+    subBias(modelBias, gradientBias);
 }
 
-Result* MomentumOptimizer(Matrix *modelMatrix, Bias *modelBias, 
+void MomentumOptimizer(Matrix *modelMatrix, Bias *modelBias, 
                           Matrix *gradientMatrix, Bias *gradientBias, float learnRate) {
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* AdaGradOptimizer(Matrix *modelMatrix, Bias *modelBias, 
+void AdaGradOptimizer(Matrix *modelMatrix, Bias *modelBias, 
                          Matrix *gradientMatrix, Bias *gradientBias, float learnRate) {
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* AdamOptimizer(Matrix *modelMatrix, Bias *modelBias, 
+void AdamOptimizer(Matrix *modelMatrix, Bias *modelBias, 
                              Matrix *gradientMatrix, Bias *gradientBias, float learnRate) {
-    return createResultWithoutData(SUCCESS, NULL); 
 }

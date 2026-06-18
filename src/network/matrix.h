@@ -8,15 +8,15 @@ int getRowCount(Matrix *this);
 
 int getColumnCount(Matrix *this);
 
-Result* mulVector(Matrix *this, Vector *vector);
+Vector* mulVector(Matrix *this, Vector *vector);
 
-Result* addMatrix(Matrix *this, Matrix *matrix);
+void addMatrix(Matrix *this, Matrix *matrix);
 
-Result* subMatrix(Matrix *this, Matrix *matrix);
+void subMatrix(Matrix *this, Matrix *matrix);
 
-Result* mulMatrix(Matrix *this, Matrix *matrix);
+void mulMatrixNumber(Matrix *this, float number);
 
-Result* mulMatrixNumber(Matrix *this, float number);
+Matrix* mulMatrix(Matrix *this, Matrix *matrix);
 
 float getMatrixValue(Matrix *this, int row, int column);
 

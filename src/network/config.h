@@ -6,7 +6,7 @@ typedef enum ActivatorKind ActivatorKind;
 
 typedef enum ActivatorLossKind ActivatorLossKind;
 
-Result *loadNetworkConfig(char *filepath);
+NetworkConfig* loadNetworkConfig(char *filepath);
 
 void releaseNetworkConfig(NetworkConfig *config);
 

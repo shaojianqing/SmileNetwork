@@ -9,19 +9,19 @@ void releaseVector(Vector *this);
 
 int getElementCount(Vector *this);
 
-Result* mulScalar(Vector *this, Vector *vector);
+float mulScalar(Vector *this, Vector *vector);
 
-Result* mulTensor(Vector *this, Vector *target);
+Matrix* mulTensor(Vector *this, Vector *target);
 
-Result* mulHadamard(Vector *this, Vector *vector);
+Vector* mulHadamard(Vector *this, Vector *vector);
 
-Result* mulMatrixVector(Vector *this, Matrix *matrix);
+Vector* mulMatrixVector(Vector *this, Matrix *matrix);
 
-Result* addVector(Vector *this, Vector *vector);
+void addVector(Vector *this, Vector *vector);
 
-Result* addBias(Vector *this, Bias *bias);
+void addBias(Vector *this, Bias *bias);
 
-Result* copyVector(Vector *this, Vector *target);
+void copyVector(Vector *this, Vector *target);
 
 float getVectorValue(Vector *this, int index);
 

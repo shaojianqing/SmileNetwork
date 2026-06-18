@@ -4,9 +4,9 @@ typedef struct TrainData TrainData;
 
 typedef struct TrainBatch TrainBatch;
 
-Result* loadTrainBatchStochastic(int batchSize);
+TrainBatch* loadTrainBatchStochastic(int batchSize);
 
-Result* loadTrainBatchForValidate();
+TrainBatch* loadTrainBatchForValidate();
 
 void releaseTrainBatch(TrainBatch *trainBatch);
 

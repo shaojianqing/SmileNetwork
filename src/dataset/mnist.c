@@ -4,7 +4,6 @@
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../memory/memory.h"
-#include "../result/result.h"
 #include "../logger/logger.h"
 #include "../file/file.h"
 #include "../reader/bytereader.h"
@@ -49,17 +48,8 @@ bool loadMnistDataFromFile(const char *filename) {
         return false;
     }
     
-    Result *readResult = readByteBuffer(mnistDataFile);
-    if (!success(readResult)) {
-        logger.error("read mnist data error, reason:%s", getMessage(readResult));
-        closeFile(mnistDataFile);
-        releaseResult(readResult);
-        return false;
-    }
-
+    byte *dataBuffer = readByteBuffer(mnistDataFile);
     long bufferSize = getFileSize(mnistDataFile);
-    byte *dataBuffer = (byte*)getData(readResult);
-    releaseResult(readResult);
     closeFile(mnistDataFile);
 
     ByteReader *byteReader = createByteReader(dataBuffer, bufferSize, 0);
@@ -123,17 +113,8 @@ bool loadMnistLabelFromFile(const char *filename) {
         return false;
     }
     
-    Result *readResult = readByteBuffer(mnistLabelFile);
-    if (!success(readResult)) {
-        logger.error("read mnist label error, reason:%s", getMessage(readResult));
-        closeFile(mnistLabelFile);
-        releaseResult(readResult);
-        return false;
-    }
-
+    byte *dataBuffer = readByteBuffer(mnistLabelFile);
     long bufferSize = getFileSize(mnistLabelFile);
-    byte *dataBuffer = (byte*)getData(readResult);
-    releaseResult(readResult);
     closeFile(mnistLabelFile);
 
     ByteReader *byteReader = createByteReader(dataBuffer, bufferSize, 0);

@@ -10,7 +10,7 @@ struct String {
 
 	char* (*getValue)(String *this);
 
-	String* (*subString)(String *this, int start, int end);
+	String* (*subString)(String *this, int startIndex, int endIndex);
 
 	String* (*catString)(String *this, String *string);
 };

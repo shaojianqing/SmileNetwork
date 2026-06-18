@@ -8,11 +8,11 @@ void releaseBias(Bias *this);
 
 int getBiasElementCount(Bias *this);
 
-Result* copyBias(Bias *this, Vector *vector);
+void copyBias(Bias *this, Vector *vector);
 
-Result* subBias(Bias *this, Bias *bias);
+void subBias(Bias *this, Bias *bias);
 
-Result* mulBiasNumber(Bias *this, float number);
+void mulBiasNumber(Bias *this, float number);
 
 float getBiasValue(Bias *this, int index);
 

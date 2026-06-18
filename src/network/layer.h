@@ -18,17 +18,17 @@ void releaseOutputLayer(OutputLayer *outputLayer);
 
 void releaseLinearLayer(LinearLayer *linearLayer);
 
-Result* forward(BaseLayer *this, Vector *vector);
+void forward(BaseLayer *this, Vector *vector);
 
-Result* backward(BaseLayer *this, Vector *target);
+void backward(BaseLayer *this, Vector *target);
 
-Result* optimize(BaseLayer *this, float learnRate);
+void optimize(BaseLayer *this, float learnRate);
 
-Result* input(InputLayer *this, Vector *vector);
+void input(InputLayer *this, Vector *vector);
 
-Result* loss(OutputLayer *this, Vector *expect);
+float loss(OutputLayer *this, Vector *expect);
 
-Result* output(OutputLayer *this);
+Vector* output(OutputLayer *this);
 
 void setNextLayer(BaseLayer *this, BaseLayer *next);
 

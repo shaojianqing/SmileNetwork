@@ -3,7 +3,8 @@
 #include "../common/common.h"
 #include "../memory/memory.h"
 #include "../random/random.h"
-#include "../result/result.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 
 #include "bias.h"
 #include "vector.h"
@@ -17,6 +18,8 @@ struct Matrix {
 
     int columnCount;
 };
+
+static Exception MemoryAllocException = {MemoryAllocExceptionType};
 
 static int calculateIndex(Matrix *this, int row, int column);
 
@@ -33,6 +36,8 @@ Matrix* createMatrix(int rowCount, int columnCount, Random random) {
                 matrix->data[i] = random();
             }
         }
+    } else {
+        throw(&MemoryAllocException, "can not allocate memory for matrix creation.");
     }
     return matrix;
 }
@@ -58,18 +63,14 @@ int getColumnCount(Matrix *this) {
     return 0;
 }
 
-Result* mulVector(Matrix *this, Vector *vector) {
-    if (this->columnCount != getElementCount(vector)) {
-        char *message = "matrix column count does not match vector element count^o^";
-        return createResultWithoutData(MATRIX_NOT_MATCH, message);
-    }
+Vector* mulVector(Matrix *this, Vector *vector) {
+
+    assertNotNull(this, "matrix instance is null for matrix and vector multiplication operation!");
+    assertNotNull(vector, "vector instance is null for matrix and vector multiplication operation!");
+
+    assertDataMatch(this->columnCount, getElementCount(vector), "matrix column count does not match vector element count for matrix and vector multiplication operation!");
 
     Vector *resultVector = createVector(this->rowCount);
-    if (resultVector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
-
     for (int i=0;i<this->rowCount;++i) {
         float sum = 0.0;
         for (int j=0;j<this->columnCount;++j) {
@@ -79,19 +80,16 @@ Result* mulVector(Matrix *this, Vector *vector) {
             setVectorValue(resultVector, i, sum);
         }
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, resultVector);
+    return resultVector;
 }
 
-Result* addMatrix(Matrix *this, Matrix *matrix) {
-    if (this == NULL || matrix == NULL) {
-        char *message = "matrix instance is null for addition operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void addMatrix(Matrix *this, Matrix *matrix) {
+    
+    assertNotNull(this, "matrix instance is null for matrix addition operation!");
+    assertNotNull(matrix, "matrix instance is null for matrix addition operation!");
 
-    if (this->rowCount != matrix->rowCount || this->columnCount != matrix->columnCount) {
-        char *message = "matrix row count or column count does not match^o^";
-        return createResultWithoutData(MATRIX_NOT_MATCH, message);
-    }
+    assertDataMatch(this->rowCount, matrix->rowCount, "matrix row count does not match for matrix addition operation!");
+    assertDataMatch(this->columnCount, matrix->columnCount, "matrix column count does not match for matrix addition operation!");
 
     for (int i=0;i<this->rowCount;++i) {
         for (int j=0;j<this->columnCount;++j) {
@@ -102,19 +100,15 @@ Result* addMatrix(Matrix *this, Matrix *matrix) {
             setMatrixValue(this, i, j, thisValue);
         }
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* subMatrix(Matrix *this, Matrix *matrix) {
-    if (this == NULL || matrix == NULL) {
-        char *message = "matrix instance is null for subtraction operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void subMatrix(Matrix *this, Matrix *matrix) {
+    
+    assertNotNull(this, "matrix instance is null for matrix subtraction operation!");
+    assertNotNull(matrix, "matrix instance is null for matrix subtraction operation!");
 
-    if (this->rowCount != matrix->rowCount || this->columnCount != matrix->columnCount) {
-        char *message = "matrix row count or column count does not match^o^";
-        return createResultWithoutData(MATRIX_NOT_MATCH, message);
-    }
+    assertDataMatch(this->rowCount, matrix->rowCount, "matrix row count does not match for matrix subtraction operation!");
+    assertDataMatch(this->columnCount, matrix->columnCount, "matrix column count does not match for matrix subtraction operation!");
 
     for (int i=0;i<this->rowCount;++i) {
         for (int j=0;j<this->columnCount;++j) {
@@ -125,26 +119,16 @@ Result* subMatrix(Matrix *this, Matrix *matrix) {
             setMatrixValue(this, i, j, thisValue);
         }
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* mulMatrix(Matrix *this, Matrix *matrix) {
-    if (this == NULL || matrix == NULL) {
-        char *message = "matrix instance is null for multiplication operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+Matrix* mulMatrix(Matrix *this, Matrix *matrix) {
+    
+    assertNotNull(this, "matrix instance is null for matrix multiplication operation!");
+    assertNotNull(matrix, "matrix instance is null for matrix multiplication operation!");
 
-    if (this->columnCount != matrix->rowCount) {
-        char *message = "matrix row count or column count does not match^o^";
-        return createResultWithoutData(MATRIX_NOT_MATCH, message);
-    }
+    assertDataMatch(this->columnCount, matrix->rowCount, "this column count does not match matrix row count for matrix multiplication operation!");
 
     Matrix *resultMatrix = createMatrix(this->rowCount, matrix->columnCount, NULL);
-    if (resultMatrix == NULL) {
-        char *message = "can not create matrix instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
-
     for (int k=0;k<matrix->columnCount;++k) {
         for (int i=0;i<this->rowCount;++i) {
             float sum = 0.0;
@@ -156,22 +140,18 @@ Result* mulMatrix(Matrix *this, Matrix *matrix) {
             }
         }
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_METRIX, resultMatrix);
+    return resultMatrix;
 }
 
-Result* mulMatrixNumber(Matrix *this, float number) {
-    if (this == NULL) {
-        char *message = "matrix instance is null for matrix number multiplication operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void mulMatrixNumber(Matrix *this, float number) {
 
+    assertNotNull(this, "matrix instance is null for matrix number multiplication operation!");
     for (int i=0;i<this->rowCount;++i) {
         for (int j=0;j<this->columnCount;++j) {
             float value = getMatrixValue(this, i, j);
             setMatrixValue(this, i, j, value * number);
         }
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
 float getMatrixValue(Matrix *this, int row, int column) {

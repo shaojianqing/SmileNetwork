@@ -6,7 +6,7 @@
 
 #include "memory.h"
 
-Object* alloc(char *file, int line, int size) {
+Object* allocate(int size) {
     Object *ptr = malloc(size);
     if (ptr != NULL) {
         memset(ptr, size, 1);

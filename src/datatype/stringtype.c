@@ -90,19 +90,19 @@ static char* getValue(String *this) {
 	}
 }
 
-static String* subString(String *this, int start, int end) {
+static String* subString(String *this, int startIndex, int endIndex) {
 	if (this == NULL) {
 		return NULL;
 	}
 
-	if (start<=end && start>=0 && end<this->length) {
+	if (startIndex >= 0 && startIndex <= endIndex && endIndex < this->length) {
 		String *string = (String *)malloc(sizeof(String));
 		if (string != NULL) {
 			bindFunction(string);
 
-			int length = end - start;
+			int length = endIndex - startIndex;
 			char *value = malloc(length + 1);
-			memcpy(value, this->value + start, length);
+			memcpy(value, this->value + startIndex, length);
 			value[string->length] = '\0';
 
 			string->value = value;

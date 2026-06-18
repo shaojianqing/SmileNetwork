@@ -11,6 +11,8 @@ struct Logger {
     LogFunc warn;
 
     LogFunc error;
+
+    LogFunc fatal;
 };
 
 void initLoggerConfig();

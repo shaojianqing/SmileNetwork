@@ -3,8 +3,8 @@
 #include "../common/common.h"
 #include "../memory/memory.h"
 #include "../random/random.h"
-#include "../result/result.h"
-#include "../datatype/stringtype.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 #include "../network/bias.h"
 #include "../network/vector.h"
 
@@ -27,42 +27,32 @@ struct TrainBatch {
     TrainData *dataList;
 };
 
+static Exception MemoryAllocException = {MemoryAllocExceptionType};
+
 static Vector* selectAndGenerateData(MnistData *mnistData, int index);
 
 static Vector* selectAndGenerateLabel(MnistLabel *mnistLabel, int index);
 
 static void setTrainData(TrainBatch* trainBatch, int index, Vector *data, Vector *label);
 
-Result* loadTrainBatchStochastic(int batchSize) {
+TrainBatch* loadTrainBatchStochastic(int batchSize) {
     MnistData *mnistData = getMnistTrainData();
     MnistLabel *mnistLabel = getMnistTrainLabel();
 
-    if (mnistData == NULL) {
-        char *message = "Mnist data is not loaded ready to load train batch^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+    assertNotNull(mnistData, "Mnist data is not loaded ready to load train batch!");
+    assertNotNull(mnistLabel, "Mnist label is not loaded ready to load train batch!");
 
-    if (mnistLabel == NULL) {
-        char *message = "Mnist label is not loaded ready to load train batch^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
-
-    if (getImageCount(mnistData) != getLableCount(mnistLabel)) {
-        char *message = "Mnist data and label count does not match, can not load train batch^o^";
-        return createResultWithoutData(MNIST_NOT_MATCH, message);
-    }
+    assertDataMatch(getImageCount(mnistData), getLableCount(mnistLabel), "vMnist data and label count does not match, can not load train batch!");
 
     TrainBatch *trainBatch = (TrainBatch*)allocate(sizeof(TrainBatch));
     if (trainBatch == NULL) {
-        char *message = "Can not create train batch instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for train batch creation.");
     }
 
     trainBatch->dataCount = batchSize;
     trainBatch->dataList = (TrainData*)allocate(batchSize*sizeof(TrainData));
     if (trainBatch->dataList == NULL) {
-        char *message = "Can not allocate train batch datalist for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for train batch datalist creation.");
     }
 
     int imageCount = getImageCount(mnistData);
@@ -73,45 +63,29 @@ Result* loadTrainBatchStochastic(int batchSize) {
 
         setTrainData(trainBatch, i, data, label);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_TRAIN_BATCH, trainBatch);
+    return trainBatch;
 }
 
-Result* loadTrainBatchForValidate() {
+TrainBatch* loadTrainBatchForValidate() {
     MnistData *mnistData = getMnistTrainData();
     MnistLabel *mnistLabel = getMnistTrainLabel();
 
-    if (mnistData == NULL) {
-        char *message = "Mnist data is not loaded ready to load train batch^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+    assertNotNull(mnistData, "Mnist data is not loaded ready to load validation batch!");
+    assertNotNull(mnistLabel, "Mnist label is not loaded ready to load validation batch!");
 
-    if (mnistLabel == NULL) {
-        char *message = "Mnist label is not loaded ready to load train batch^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
-
-    if (getImageCount(mnistData) != 10000) {
-        char *message = "Mnist label is loaded but not for test or validation^o^";
-        return createResultWithoutData(MNIST_NOT_MATCH, message);
-    }
-
-    if (getImageCount(mnistData) != getLableCount(mnistLabel)) {
-        char *message = "Mnist data and label count does not match, can not load train batch^o^";
-        return createResultWithoutData(MNIST_NOT_MATCH, message);
-    }
+    assertDataMatch(getImageCount(mnistData), 10000, "Mnist label is loaded but not for test or validation!");
+    assertDataMatch(getImageCount(mnistData), getLableCount(mnistLabel), "Mnist data and label count does not match, can not load validation batch!");
 
     TrainBatch *trainBatch = (TrainBatch*)allocate(sizeof(TrainBatch));
     if (trainBatch == NULL) {
-        char *message = "Can not create train batch instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for train batch creation.");
     }
 
     int totalDataCount = getImageCount(mnistData);
     trainBatch->dataCount = totalDataCount;
     trainBatch->dataList = (TrainData*)allocate(totalDataCount*sizeof(TrainData));
     if (trainBatch->dataList == NULL) {
-        char *message = "Can not allocate train batch datalist for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for train batch datalist creation.");
     }
 
     for (int i=0;i<totalDataCount;++i) {
@@ -120,7 +94,7 @@ Result* loadTrainBatchForValidate() {
 
         setTrainData(trainBatch, i, data, label);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_TRAIN_BATCH, trainBatch);
+    return trainBatch;
 }
 
 void releaseTrainBatch(TrainBatch *trainBatch) {

@@ -7,7 +7,8 @@
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../memory/memory.h"
-#include "../result/result.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 #include "../logger/logger.h"
 
 #include "file.h"
@@ -20,6 +21,9 @@ struct File {
 };
 
 extern Logger logger;
+
+static Exception MemoryAllocException = {MemoryAllocExceptionType};
+static Exception FileReadException = {FileOperateExceptionType};
 
 File* openFile(const char *filepath, int flags) {
     int fd = open(filepath, flags);
@@ -63,17 +67,14 @@ long long getFileSize(File *this) {
     return this->size;
 }
 
-Result* readCharString(File *this) {
-    if (this == NULL) {
-        char *message = "file instance is null for reading char string operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+char* readCharString(File *this) {
+
+    assertNotNull(this, "file instance is null for reading char string operation!");
 
     long readSize = this->size;
     char *string = (char *)allocate((int)readSize + 1);
     if (string == NULL) {
-        char *message = "fail to read char string for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for reading string buffer creation.");
     }
 
     long count = 0;
@@ -83,27 +84,23 @@ Result* readCharString(File *this) {
             break;
         } else if (num < 0) {
             release(string);
-            char *message = "fail to read char string for file operation error^o^";
-            return createResultWithoutData(FILE_READ_ERROR, message);
+            throw(&FileReadException, "fail to read char string for file operation error.");
         }
         count += num;
     }
 
     string[readSize] = '\0';
-    return createResultWithData(SUCCESS, NULL, TYPE_CHAR_BUFFER, string);
+    return string;
 }
 
-Result* readByteBuffer(File *this) {
-        if (this == NULL) {
-        char *message = "file instance is null for reading byte buffer operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+byte* readByteBuffer(File *this) {
+
+    assertNotNull(this, "file instance is null for reading byte buffer operation!");
 
     long readSize = this->size;
     byte *buffer = (byte *)allocate((int)readSize);
     if (buffer == NULL) {
-        char *message = "fail to read byte buffer for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
+        throw(&MemoryAllocException, "can not allocate memory for reading byte buffer creation.");
     }
 
     long count = 0;
@@ -113,15 +110,14 @@ Result* readByteBuffer(File *this) {
             break;
         } else if (num < 0) {
             release(buffer);
-            char *message = "fail to read byte buffer for file operation error^o^";
-            return createResultWithoutData(FILE_READ_ERROR, message);
+            throw(&FileReadException, "fail to read byte buffer for file operation error.");
         }
         count += num;
     }
     
-    return createResultWithData(SUCCESS, NULL, TYPE_BYTE_BUFFER, buffer);
+    return buffer;
 }
 
-Result* writeByteBuffer(File *this, byte* buffer, long count) {
-    return NULL;
+bool writeByteBuffer(File *this, byte* buffer, long count) {
+    return false;
 }

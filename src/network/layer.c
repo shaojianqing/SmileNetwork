@@ -5,8 +5,8 @@
 #include "../memory/memory.h"
 #include "../random/random.h"
 #include "../logger/logger.h"
-#include "../result/result.h"
-#include "../datatype/stringtype.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 
 #include "bias.h"
 #include "config.h"
@@ -39,11 +39,11 @@ struct BaseLayer {
 
     Optimizer optimizer;
 
-    Result* (*forward)(BaseLayer *this, Vector *vector);
+    void (*forward)(BaseLayer *this, Vector *vector);
 
-    Result* (*backward)(BaseLayer *this, Vector *target);
+    void (*backward)(BaseLayer *this, Vector *target);
 
-    Result* (*optimize)(BaseLayer *this, float learnRate);
+    void (*optimize)(BaseLayer *this, float learnRate);
 };
 
 struct InputLayer {
@@ -71,15 +71,15 @@ static void releaseBaselayer(BaseLayer *baseLayer);
 
 static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config);
 
-static Result* backwardInner(BaseLayer *this, Vector *target);
+static void backwardInner(BaseLayer *this, Vector *target);
 
-static Result* backwardOutput(BaseLayer *this, Vector *target);
+static void backwardOutput(BaseLayer *this, Vector *target);
 
-static Result* forwardInner(BaseLayer *this, Vector *vector);
+static void forwardInner(BaseLayer *this, Vector *vector);
 
-static Result* forwardOutput(BaseLayer *this, Vector *vector);
+static void forwardOutput(BaseLayer *this, Vector *vector);
 
-static Result* optimizeInner(BaseLayer *this, float learnRate);
+static void optimizeInner(BaseLayer *this, float learnRate);
 
 InputLayer* buildInputLayer(LayerConfig *config) {
     InputLayer *inputLayer = (InputLayer*)allocate(sizeof(InputLayer));
@@ -230,32 +230,30 @@ static void releaseBaselayer(BaseLayer *baseLayer) {
     releaseBias(gradientBias);
 }
 
-Result* forward(BaseLayer *this, Vector *vector) {
-    return this->forward(this, vector);
+void forward(BaseLayer *this, Vector *vector) {
+    this->forward(this, vector);
 }
 
-Result* backward(BaseLayer *this, Vector *target) {
-    return this->backward(this, target);
+void backward(BaseLayer *this, Vector *target) {
+    this->backward(this, target);
 }
 
-Result* optimize(BaseLayer *this, float learnRate) {
-    return this->optimize(this, learnRate);
+void optimize(BaseLayer *this, float learnRate) {
+    this->optimize(this, learnRate);
 }
 
-Result* input(InputLayer *this, Vector *vector) {
-    return forwardInner((BaseLayer*)this, vector);
+void input(InputLayer *this, Vector *vector) {
+    forwardInner((BaseLayer*)this, vector);
 }
 
-Result* output(OutputLayer *this) {
+Vector* output(OutputLayer *this) {
     BaseLayer *baseLayer = (BaseLayer*)this;
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, baseLayer->resultVector);
+    return baseLayer->resultVector;
 }
 
-Result* loss(OutputLayer *this, Vector *expect) {
-    if (this->activatorLossFunc == NULL) {
-        char *message = "loss func not configured for loss calculation^o^";
-        return createResultWithoutData(LOSSFUNC_NO_CONFIG, message);
-    }
+float loss(OutputLayer *this, Vector *expect) {
+
+    assertNotNull(this->activatorLossFunc, "loss function not configured for loss calculation!");
 
     BaseLayer *baseLayer = (BaseLayer*)this;
     return this->activatorLossFunc(baseLayer->resultVector, expect);
@@ -269,113 +267,54 @@ void setPrevLayer(BaseLayer *this, BaseLayer *prev) {
     this->prevLayer = prev;
 }
 
-static Result* forwardInner(BaseLayer *this, Vector *inputVector) {
+static void forwardInner(BaseLayer *this, Vector *inputVector) {
     Activator *activator = this->activator;
     Matrix *matrix = this->modelMatrix;
     Bias *bias = this->modelBias;
 
     this->inputVector = inputVector;
-    Result *matrixMulResult = mulVector(matrix, inputVector);
-    if (!success(matrixMulResult)) {
-        return matrixMulResult;
-    }
+    Vector *innerVector = mulVector(matrix, inputVector);
+    addBias(innerVector, bias);
 
-    Vector *innerVector = (Vector*)getData(matrixMulResult);
-    releaseResult(matrixMulResult);
-    Result *addBiasResult = addBias(innerVector, bias);
-    if (!success(addBiasResult)) {
-        return addBiasResult;
-    }
-    releaseResult(addBiasResult);
-
-    Result *activateResult = activator->activate(innerVector);
+    this->resultVector = activator->activate(innerVector);
     releaseVector(innerVector);
-
-    if (!success(activateResult)) {
-        return activateResult;
-    }
-    this->resultVector = (Vector*)getData(activateResult);
-    releaseResult(activateResult);
     
     if (this->nextLayer != NULL) {
         BaseLayer *nextLayer = this->nextLayer;
-        return nextLayer->forward(nextLayer, this->resultVector);
-    } else {
-        return createResultWithoutData(SUCCESS, NULL);
+        nextLayer->forward(nextLayer, this->resultVector);
     }
 }
 
-static Result* forwardOutput(BaseLayer *this, Vector *inputVector) {
+static void forwardOutput(BaseLayer *this, Vector *inputVector) {
     Matrix *matrix = this->modelMatrix;
     Bias *bias = this->modelBias;
     
     this->inputVector = inputVector;
-    Result *matrixMulResult = mulVector(matrix, inputVector);
-    if (!success(matrixMulResult)) {
-        return matrixMulResult;
-    }
-    Vector *innerVector = (Vector*)getData(matrixMulResult);
-    releaseResult(matrixMulResult);
-
-    Result *addBiasResult = addBias(innerVector, bias);
-    if (!success(addBiasResult)) {
-        return addBiasResult;
-    }
-    releaseResult(addBiasResult);
+    Vector *innerVector = mulVector(matrix, inputVector);
+    addBias(innerVector, bias);
 
     Activator *activator = this->activator;
-    Result *activateResult = activator->activate(innerVector);
+    this->resultVector = activator->activate(innerVector);
     releaseVector(innerVector);
-
-    if (!success(activateResult)) {
-        return activateResult;
-    }
-    this->resultVector = (Vector*)getData(activateResult);
-    releaseResult(activateResult);
-
-    return createResultWithoutData(SUCCESS, NULL);
 }
     
-static Result* backwardInner(BaseLayer *this, Vector *prevGradientVector) {
-    if (this->activator == NULL) {
-        char *message = "activator instance not configured for gradient calculation^o^";
-        return createResultWithoutData(GRADFUNC_NO_CONFIG, message);
-    }
+static void backwardInner(BaseLayer *this, Vector *prevGradientVector) {
 
-    Result *derivativeResult = this->activator->derivative(this->resultVector);
-    if (!success(derivativeResult)) {
-        return derivativeResult;
-    }
+    assertNotNull(this->activator, "activator instance not configured for gradient calculation!");
 
-    Vector *thisGradientVector = getData(derivativeResult);
-    releaseResult(derivativeResult);
+    Vector *thisGradientVector = this->activator->derivative(this->resultVector);
+    Vector *gradientVector = mulHadamard(thisGradientVector, prevGradientVector);
 
-    Result *mulHamdResult = mulHadamard(thisGradientVector, prevGradientVector);
     releaseVector(thisGradientVector);
     releaseVector(prevGradientVector);
-
-    if (!success(mulHamdResult)) {
-        return mulHamdResult;
-    }
-    Vector *gradientVector = (Vector *)getData(mulHamdResult);
-    releaseResult(mulHamdResult);
     
     Vector *inputVector = this->inputVector;
-    Result *matrixMulResult = mulTensor(gradientVector, inputVector);
-    if (!success(matrixMulResult)) {
-        return matrixMulResult;
-    }
-    
-    this->gradientMatrix = (Matrix*)getData(matrixMulResult);
-    releaseResult(matrixMulResult);
+    this->gradientMatrix = mulTensor(gradientVector, this->inputVector);
 
     int biasCount = getElementCount(gradientVector);
     Bias *gradientBias = createBias(biasCount, NULL);
-    Result *biasCopyResult = copyBias(gradientBias, gradientVector);
-    if (!success(biasCopyResult)) {
-        return biasCopyResult;
-    }
-    releaseResult(biasCopyResult);
+    copyBias(gradientBias, gradientVector);
+
     this->gradientBias = gradientBias;
     
     releaseVector(this->resultVector);
@@ -384,53 +323,26 @@ static Result* backwardInner(BaseLayer *this, Vector *prevGradientVector) {
     BaseLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
         Matrix *modelMatrix = this->modelMatrix;
-        Result *mulVectorResult = mulMatrixVector(gradientVector, modelMatrix);
-        releaseVector(gradientVector);
-        if (!success(mulVectorResult)) {
-            return mulVectorResult;
-        }
-
-        Vector *prevGradientVector = (Vector*)getData(mulVectorResult);
-        releaseResult(mulVectorResult);
-
-        return prevLayer->backward(prevLayer, prevGradientVector);
-    } else {
-        releaseVector(gradientVector);
-        return createResultWithoutData(SUCCESS, NULL);
+        Vector *prevGradientVector = mulMatrixVector(gradientVector, modelMatrix);
+        prevLayer->backward(prevLayer, prevGradientVector);
     }
+    releaseVector(gradientVector);
 }
 
-static Result* backwardOutput(BaseLayer *this, Vector *target) {
+static void backwardOutput(BaseLayer *this, Vector *target) {
+    
     OutputLayer *outputLayer = (OutputLayer*)this;
-    if (outputLayer->activatorGradientFunc == NULL) {
-        char *message = "gradient func not configured for gradient calculation^o^";
-        return createResultWithoutData(GRADFUNC_NO_CONFIG, message);
-    }
 
-    Result *gradientResult = outputLayer->activatorGradientFunc(this->resultVector, target);
-    if (!success(gradientResult)) {
-        return gradientResult;
-    }
-    
-    Vector *gradientVector = (Vector*)getData(gradientResult);
-    releaseResult(gradientResult);
+    assertNotNull(outputLayer->activatorGradientFunc, "gradient func not configured for gradient calculation!");
 
     Vector *inputVector = this->inputVector;
-    Result *matrixMulResult = mulTensor(gradientVector, inputVector);
-    if (!success(matrixMulResult)) {
-        return matrixMulResult;
-    }
-    
-    this->gradientMatrix = (Matrix*)getData(matrixMulResult);
-    releaseResult(matrixMulResult);
+    Vector *gradientVector = outputLayer->activatorGradientFunc(this->resultVector, target);
+    this->gradientMatrix = mulTensor(gradientVector, inputVector);
 
     int biasCount = getElementCount(gradientVector);
     Bias *gradientBias = createBias(biasCount, NULL);
-    Result *biasCopyResult = copyBias(gradientBias, gradientVector);
-    if (!success(biasCopyResult)) {
-        return biasCopyResult;
-    }
-    releaseResult(biasCopyResult);
+    copyBias(gradientBias, gradientVector);
+
     this->gradientBias = gradientBias;
     
     releaseVector(this->resultVector);
@@ -439,33 +351,20 @@ static Result* backwardOutput(BaseLayer *this, Vector *target) {
     BaseLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
         Matrix *modelMatrix = this->modelMatrix;
-        Result *mulVectorResult = mulMatrixVector(gradientVector, modelMatrix);
-        releaseVector(gradientVector);
-        if (!success(mulVectorResult)) {
-            return mulVectorResult;
-        }
-        Vector *prevGradientVector = (Vector*)getData(mulVectorResult);
-        releaseResult(mulVectorResult);
-        
-        return prevLayer->backward(prevLayer, prevGradientVector);
-    } else {
-        releaseVector(gradientVector);
-        return createResultWithoutData(SUCCESS, NULL);
-    }
+        Vector *prevGradientVector = mulMatrixVector(gradientVector, modelMatrix);
+        prevLayer->backward(prevLayer, prevGradientVector);
+    } 
+    releaseVector(gradientVector); 
 }
 
-static Result* optimizeInner(BaseLayer *this, float learnRate) {
+static void optimizeInner(BaseLayer *this, float learnRate) {
     Bias *modelBias = this->modelBias;
     Matrix *modelMatrix = this->modelMatrix;
 
     Bias *gradientBias = this->gradientBias;
     Matrix *gradientMatrix = this->gradientMatrix;
 
-    Result *result = this->optimizer(modelMatrix, modelBias, gradientMatrix, gradientBias, learnRate);
-    if (!success(result)) {
-        return result;
-    }
-    releaseResult(result);
+    this->optimizer(modelMatrix, modelBias, gradientMatrix, gradientBias, learnRate);
     
     releaseBias(this->gradientBias);
     releaseMatrix(this->gradientMatrix);
@@ -475,8 +374,6 @@ static Result* optimizeInner(BaseLayer *this, float learnRate) {
 
     BaseLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
-        return prevLayer->optimize(prevLayer, learnRate);
-    } else {
-        return createResultWithoutData(SUCCESS, NULL);
+        prevLayer->optimize(prevLayer, learnRate);
     }
 }

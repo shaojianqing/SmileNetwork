@@ -5,9 +5,9 @@ enum ActivatorLossKind {
     SOFTMAX_CEL = 2
 };
 
-typedef Result* (*ActivatorLossFunc)(Vector *predict, Vector *expect);
+typedef float (*ActivatorLossFunc)(Vector *predict, Vector *expect);
 
-typedef Result* (*ActivatorGradientFunc)(Vector *predict, Vector *expect);
+typedef Vector* (*ActivatorGradientFunc)(Vector *predict, Vector *expect);
 
 ActivatorLossFunc getActivatorLossFunc(ActivatorLossKind kind);
 

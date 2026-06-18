@@ -3,8 +3,8 @@
 
 #include "../common/common.h"
 #include "../random/random.h"
-#include "../result/result.h"
-#include "../datatype/stringtype.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 
 #include "bias.h"
 #include "vector.h"
@@ -13,21 +13,21 @@
 #define RELU_FACTOR            0.01f
 
 
-static Result* sigmoidActivate(Vector *this);
+static Vector* sigmoidActivate(Vector *this);
 
-static Result* softmaxActivate(Vector *this);
+static Vector* softmaxActivate(Vector *this);
 
-static Result* equalActivate(Vector *this);
+static Vector* equalActivate(Vector *this);
 
-static Result* reluActivate(Vector *this);
+static Vector* reluActivate(Vector *this);
 
-static Result* sigmoidDerivative(Vector *this);
+static Vector* sigmoidDerivative(Vector *this);
 
-static Result* softmaxDerivative(Vector *this);
+static Vector* softmaxDerivative(Vector *this);
 
-static Result* reluDerivative(Vector *this);
+static Vector* reluDerivative(Vector *this);
 
-static Result* equalDerivative(Vector *this);
+static Vector* equalDerivative(Vector *this);
 
 static Activator sigmoidActivator;
 
@@ -64,199 +64,131 @@ Activator* getActivator(ActivatorKind kind) {
     return NULL;
 }
 
-static Result* sigmoidActivate(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for equal activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* sigmoidActivate(Vector *this) {
+
+    assertNotNull(this, "vector instance is null for sigmoid activate operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
+    copyVector(resultVector, this);
 
-    Result *copyResult = copyVector(vector, this);
-    if (!success(copyResult)) {
-        return copyResult;
-    }
-    releaseResult(copyResult);
-
-    int vectorCount = getElementCount(vector);;
+    int vectorCount = getElementCount(resultVector);;
     for (int i=0;i<vectorCount;++i) {
-        float value = getVectorValue(vector, i);
+        float value = getVectorValue(resultVector, i);
         value = 1.0/(1.0 + exp(-value));
-        setVectorValue(vector, i, value);
+        setVectorValue(resultVector, i, value);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }
 
-static Result* softmaxActivate(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for equal activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* softmaxActivate(Vector *this) {
+
+    assertNotNull(this, "vector instance is null for softmax activate operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
+    copyVector(resultVector, this);
 
-    Result *copyResult = copyVector(vector, this);
-    if (!success(copyResult)) {
-        return copyResult;
-    }
-    releaseResult(copyResult);
-
-    int vectorCount = getElementCount(vector);
-    float maxElement = getVectorValue(vector, 0);
+    int vectorCount = getElementCount(resultVector);
+    float maxElement = getVectorValue(resultVector, 0);
     for (int i=0;i<vectorCount;++i) {
-        if (getVectorValue(vector, i) > maxElement) {
-            maxElement = getVectorValue(vector, i);
+        if (getVectorValue(resultVector, i) > maxElement) {
+            maxElement = getVectorValue(resultVector, i);
         }
     }
 
     float sum = 0.0;
     for (int i=0;i<vectorCount;++i) {
-        float value = getVectorValue(vector, i);
+        float value = getVectorValue(resultVector, i);
         sum += exp(value - maxElement);
     }
 
     for (int i=0;i<vectorCount;++i) {
-        float value = getVectorValue(vector, i);
+        float value = getVectorValue(resultVector, i);
         float item = exp(value - maxElement)/sum;
-        setVectorValue(vector, i, item);
+        setVectorValue(resultVector, i, item);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }
 
-static Result* equalActivate(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for equal activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* equalActivate(Vector *this) {
+
+    assertNotNull(this, "vector instance is null for equal activate operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
 
-    Result *copyResult = copyVector(vector, this);
-    if (!success(copyResult)) {
-        return copyResult;
-    }
-    releaseResult(copyResult);
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    copyVector(resultVector, this);
+    return resultVector;
 }
 
-static Result* reluActivate(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for relu activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* reluActivate(Vector *this) {
+    
+    assertNotNull(this, "vector instance is null for relu activate operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
-
+    Vector *resultVector = createVector(thisCount);
     for (int i=0;i<thisCount;++i) {
         float thisValue = getVectorValue(this, i);
         if (thisValue > 0.0) {
-            setVectorValue(vector, i, thisValue);
+            setVectorValue(resultVector, i, thisValue);
         } else {
             thisValue = thisValue * RELU_FACTOR;
-            setVectorValue(vector, i, thisValue);
+            setVectorValue(resultVector, i, thisValue);
         }
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }
 
-static Result* sigmoidDerivative(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for relu activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* sigmoidDerivative(Vector *this) {
+
+    assertNotNull(this, "vector instance is null for sigmoid derivative operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
+    copyVector(resultVector, this);
 
-    Result *copyResult = copyVector(vector, this);
-    if (!success(copyResult)) {
-        return copyResult;
-    }
-    releaseResult(copyResult);
-
-    int vectorCount = getElementCount(vector);
+    int vectorCount = getElementCount(resultVector);
     for (int i=0;i<vectorCount;++i) {
-        float value = getVectorValue(vector, i);
+        float value = getVectorValue(resultVector, i);
         float result = value * (1.0 - value);
-        setVectorValue(vector, i, result);
+        setVectorValue(resultVector, i, result);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }
 
-static Result* softmaxDerivative(Vector *this) {
+static Vector* softmaxDerivative(Vector *this) {
     return NULL;
 }
 
-static Result* equalDerivative(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for relu activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* equalDerivative(Vector *this) {
+
+    assertNotNull(this, "vector instance is null for equal derivative operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
 
-    int vectorCount = getElementCount(vector);
+    int vectorCount = getElementCount(resultVector);
     for (int i=0;i<vectorCount;++i) {
-        setVectorValue(vector, i, 1.0);
+        setVectorValue(resultVector, i, 1.0);
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }
 
-static Result* reluDerivative(Vector *this) {
-    if (this == NULL) {
-        char *message = "vector instance is null for relu activation operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+static Vector* reluDerivative(Vector *this) {
+    assertNotNull(this, "vector instance is null for relu derivative operation!");
 
     int thisCount = getElementCount(this);
-    Vector *vector = createVector(thisCount);
-    if (vector == NULL) {
-        char *message = "can not create vector instance for memory allocation error^o^";
-        return createResultWithoutData(MEMORY_ALLOC_ERROR, message);
-    }
+    Vector *resultVector = createVector(thisCount);
+    copyVector(resultVector, this);
 
-    Result *copyResult = copyVector(vector, this);
-    if (!success(copyResult)) {
-        return copyResult;
-    }
-    releaseResult(copyResult);
-
-    int vectorCount = getElementCount(vector);
+    int vectorCount = getElementCount(resultVector);
     for (int i=0;i<vectorCount;++i) {
-        if (getVectorValue(vector, i) >= 0.0) {
-            setVectorValue(vector, i, 1.0);
+        if (getVectorValue(resultVector, i) >= 0.0) {
+            setVectorValue(resultVector, i, 1.0);
         } else {
-            setVectorValue(vector, i, RELU_FACTOR);
+            setVectorValue(resultVector, i, RELU_FACTOR);
         }
     }
-    return createResultWithData(SUCCESS, NULL, TYPE_VECTOR, vector);
+    return resultVector;
 }

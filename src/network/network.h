@@ -8,11 +8,11 @@ bool constructNeuralNetwork(NetworkConfig *config);
 
 void releaseNeuralNetwork(NeuralNetwork *network);
 
-Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
+bool train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
 
-Result* validate(NeuralNetwork *this, TrainBatch *trainBatch);
+bool validate(NeuralNetwork *this, TrainBatch *trainBatch);
 
-Result* predict(NeuralNetwork *this, Vector *vector);
+Vector* predict(NeuralNetwork *this, Vector *vector);
 
 int getTrainEpochCount(NeuralNetwork *this);
 

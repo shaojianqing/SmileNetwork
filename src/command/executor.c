@@ -7,8 +7,8 @@
 #include "../random/random.h"
 #include "../memory/memory.h"
 #include "../logger/logger.h"
+#include "../except/exception.h"
 #include "../datatype/datatype.h"
-#include "../result/result.h"
 #include "../printer/printer.h"
 #include "../datatype/stringtype.h"
 #include "../dataset/mnist.h"
@@ -28,145 +28,176 @@
 extern Logger logger;
 
 void loadConfigExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
-    
-    Result *result = loadNetworkConfig(parameter->getValue(parameter));
-    if (!success(result)) {
-        printMessage(RED, getMessage(result));
-        releaseResult(result);
-        return;
-    }
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
+        
+        NetworkConfig *config = loadNetworkConfig(parameter->getValue(parameter));
+        NeuralNetwork *network = getNeuralNetwork();
+        if (network != NULL) {
+            releaseNeuralNetwork(network);
+        }
 
-    NetworkConfig *config = (NetworkConfig*)getData(result);
-    releaseResult(result);
-
-    NeuralNetwork *network = getNeuralNetwork();
-    if (network != NULL) {
-        releaseNeuralNetwork(network);
-    }
-
-    bool success = constructNeuralNetwork(config);
-    releaseNetworkConfig(config);
-    if (success) {
-        printMessage(WHITE, "Neural network has been constructed and initialized successfully^+^");
-    } else {
-        printMessage(RED, "Neural network construction encounters error, please check logs^o^");
-    }
+        bool success = constructNeuralNetwork(config);
+        releaseNetworkConfig(config);
+        if (success) {
+            printMessage(WHITE, "Neural network has been constructed and initialized successfully^+^");
+        } else {
+            printMessage(RED, "Neural network construction encounters error, please check logs^o^");
+        }
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("load network config raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void loadModelExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
 
-    printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
-    logger.info("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+        printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+        logger.info("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("load network model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void saveModelExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
 
-    printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+        printf("execute command[name:%s, parameter:%s]\n", name->getValue(name), parameter->getValue(parameter));
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("save network model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void showModelExecutor(Command *command) {
-    String *name = getCommandName(command);
+    try {
+        String *name = getCommandName(command);
 
-    printf("execute command[name:%s]\n", name->getValue(name));
-    logger.info("execute command[name:%s]", name->getValue(name));
+        printf("execute command[name:%s]\n", name->getValue(name));
+        logger.info("execute command[name:%s]", name->getValue(name));
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("show network model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void loadMnistDataExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
 
-    bool success = loadMnistDataFromFile(parameter->getValue(parameter));
-    if (success) {
-        printMessage(WHITE, "Load mnist data successfully^+^");
-    } else {
-        printMessage(RED, "Load mnist data error, please check log for detail^o^");
-    }
+        bool success = loadMnistDataFromFile(parameter->getValue(parameter));
+        if (success) {
+            printMessage(WHITE, "Load mnist data successfully^+^");
+        } else {
+            printMessage(RED, "Load mnist data error, please check log for detail^o^");
+        }
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("load mnist data raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void loadMnistLabelExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
 
-    bool success = loadMnistLabelFromFile(parameter->getValue(parameter));
-    if (success) {
-        printMessage(WHITE, "Load mnist label successfully^+^");
-    } else {
-        printMessage(RED, "Load mnist label error, please check log for detail^o^");
-    }
+        bool success = loadMnistLabelFromFile(parameter->getValue(parameter));
+        if (success) {
+            printMessage(WHITE, "Load mnist label successfully^+^");
+        } else {
+            printMessage(RED, "Load mnist label error, please check log for detail^o^");
+        }
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("load mnist label raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void startTrainExecutor(Command *command) {
-    NeuralNetwork *neuralNetwork = getNeuralNetwork();
-    if (neuralNetwork == NULL) {
-        printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
-        return;
-    }
-
-    int epoch = 0, trainEpochCount = getTrainEpochCount(neuralNetwork);
-    while (epoch < trainEpochCount) { 
-        int trainBatchSize = getTrainBatchSize(neuralNetwork);
-        Result *loadResult = loadTrainBatchStochastic(trainBatchSize);
-        if (!success(loadResult)) {
-            printMessage(RED, getMessage(loadResult));
-            releaseResult(loadResult);
+    try {
+        NeuralNetwork *neuralNetwork = getNeuralNetwork();
+        if (neuralNetwork == NULL) {
+            printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
             return;
         }
 
-        TrainBatch *trainBatch = (TrainBatch*)getData(loadResult);
-        releaseResult(loadResult);
+        int epoch = 0, trainEpochCount = getTrainEpochCount(neuralNetwork);
+        while (epoch < trainEpochCount) { 
+            int trainBatchSize = getTrainBatchSize(neuralNetwork);
+            TrainBatch *trainBatch = loadTrainBatchStochastic(trainBatchSize);
+            bool success = train(neuralNetwork, trainBatch, epoch);
+            if (success) {
+                printMessage(WHITE, "Neural network has trained data with [epoch:%i]^+^", epoch);
+            }
 
-        Result *trainResult = train(neuralNetwork, trainBatch, epoch);
-        if (success(trainResult)) {
-            printMessage(WHITE, "Neural network has trained data with [epoch:%i]^+^", epoch);
-        } else {
-            printMessage(RED, getMessage(trainResult));
+            releaseTrainBatch(trainBatch);
+            epoch++;
         }
-        releaseResult(trainResult);
-        releaseTrainBatch(trainBatch);
-
-        epoch++;
-    }
-    printMessage(WHITE, "Neural network has finished training in [epoch:%i]^+^", epoch);
+        printMessage(WHITE, "Neural network has finished training in [epoch:%i]^+^", epoch);
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("train model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void predictExecutor(Command *command) {
-    String *name = getCommandName(command);
-    String *parameter = getCommandParam(command);
+    try {
+        String *name = getCommandName(command);
+        String *parameter = getCommandParam(command);
 
-    printf("execute command[name:%s]\n", name->getValue(name));
+        printf("execute command[name:%s]\n", name->getValue(name));
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("predict model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void validateExecutor(Command *command) {
-    NeuralNetwork *neuralNetwork = getNeuralNetwork();
-    if (neuralNetwork == NULL) {
-        printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
-        return;
-    }
+    try {
+        NeuralNetwork *neuralNetwork = getNeuralNetwork();
+        if (neuralNetwork == NULL) {
+            printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
+            return;
+        }
 
-    Result *loadResult = loadTrainBatchForValidate();
-    if (!success(loadResult)) {
-        printMessage(RED, getMessage(loadResult));
-        releaseResult(loadResult);
-        return;
-    }
+        TrainBatch *validationBatch = loadTrainBatchForValidate();
+        bool success = validate(neuralNetwork, validationBatch);
+        if (success) {
+            printMessage(WHITE, "Neural network has been validate successfully^+^");
+        }
 
-    TrainBatch *trainBatch = (TrainBatch*)getData(loadResult);
-    releaseResult(loadResult);
-
-    Result *validateResult = validate(neuralNetwork, trainBatch);
-     if (success(validateResult)) {
-        printMessage(WHITE, "Neural network has been validate successfully^+^");
-    } else {
-        printMessage(RED, getMessage(validateResult));
-    }
-    releaseResult(validateResult);
-    releaseTrainBatch(trainBatch);
+        releaseTrainBatch(validationBatch);
+    } uncaught {
+        Exception *ex = fetchException();
+        printMessage(RED, ex->message);
+        logger.error("validate model raise exception[type:%s,file:%s,line:%d,message:%s]", 
+            ex->type, ex->filename, ex->line, ex->message);
+    } end
 }
 
 void showHelpExecutor(Command *command) {

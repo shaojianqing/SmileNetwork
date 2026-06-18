@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/json.o tgt/bytereader.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/optimizer.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/result.o tgt/vector.o tgt/mnist.o tgt/train.o
+OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/stack.o tgt/json.o tgt/bytereader.o tgt/exception.o tgt/assertion.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/optimizer.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/vector.o tgt/mnist.o tgt/train.o
 
 .PHONY : build clean
 
@@ -34,10 +34,19 @@ tgt/arraylist.o : src/datatype/arraylist.c src/datatype/arraylist.h
 tgt/hashmap.o : src/datatype/hashmap.c src/datatype/hashmap.h
 	$(CC) $(CCFLAGES) $< -o $@
 
+tgt/stack.o : src/datatype/stack.c src/datatype/stack.h
+	$(CC) $(CCFLAGES) $< -o $@
+
 tgt/json.o : src/json/json.c src/json/json.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/bytereader.o : src/reader/bytereader.c src/reader/bytereader.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/exception.o : src/except/exception.c src/except/exception.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/assertion.o : src/except/assertion.c src/except/assertion.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/random.o : src/random/random.c src/random/random.h
@@ -74,9 +83,6 @@ tgt/bias.o : src/network/bias.c src/network/bias.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/matrix.o : src/network/matrix.c src/network/matrix.h
-	$(CC) $(CCFLAGES) $< -o $@
-
-tgt/result.o : src/result/result.c src/result/result.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/vector.o : src/network/vector.c src/network/vector.h

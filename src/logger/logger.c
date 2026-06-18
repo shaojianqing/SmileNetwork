@@ -15,12 +15,11 @@
 #define INFO               "[INFO]"
 #define WARN               "[WARN]"
 #define ERROR              "[ERROR]"
+#define FATAL              "[FATAL]"
 
 Logger logger;
 
 FILE *logFile = NULL;
-
-char *logFilepath = "/Users/shaojianqing/logs/SmileNetwork.log";
 
 static void debug(const char *format, ...);
 
@@ -30,6 +29,8 @@ static void warn(const char *format, ...);
 
 static void error(const char *format, ...);
 
+static void fatal(const char *format, ...);
+
 static void log(const char *level, const char *message);
 
 void initLoggerConfig() {
@@ -37,7 +38,7 @@ void initLoggerConfig() {
     char *logFilename = getenv(LOG_FILE_NAME);
     if (logFilename == NULL) {
         printMessage(RED, "log filename has not been set, please set it via environment variable^+^");
-        exit(0);
+        exit(-1);
     }
 
     logFile = fopen(logFilename, "a");
@@ -46,6 +47,7 @@ void initLoggerConfig() {
     logger.info = info;
     logger.warn = warn;
     logger.error = error;
+    logger.fatal = fatal;
 }
 
 static void debug(const char *format, ...) {
@@ -86,6 +88,16 @@ static void error(const char *format, ...) {
     va_end(args);
 
     log(ERROR, buffer);
+}
+
+static void fatal(const char *format, ...) {
+    char buffer[LOG_BUFFER_SIZE];
+    va_list args;
+    va_start(args, format);
+    vsprintf(buffer, format, args);
+    va_end(args);
+
+    log(FATAL, buffer);
 }
 
 static void log(const char *level, const char *message) {

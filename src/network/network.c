@@ -5,7 +5,7 @@
 #include "../common/constant.h"
 #include "../logger/logger.h"
 #include "../memory/memory.h"
-#include "../result/result.h"
+#include "../except/exception.h"
 #include "../random/random.h"
 #include "../dataset/train.h"
 
@@ -38,6 +38,8 @@ struct NeuralNetwork {
 extern Logger logger;
 
 static NeuralNetwork *neuralNetwork;
+
+Exception TestException = {"", "ewewe", 0};
 
 static int getLabelValueFromOneHot(Vector *vector);
 
@@ -89,61 +91,31 @@ bool constructNeuralNetwork(NetworkConfig *config) {
     return checkNeuralNetwork(neuralNetwork);
 }
 
-Result* train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
+bool train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
     int trainDataCount = getTrainDataCount(trainBatch);
     for (int i=0;i<trainDataCount;++i) {
         TrainData *trainData = getTrainData(trainBatch, i);
-        Result *predictResult = predict(this, getDataForTrain(trainData));
-        if (!success(predictResult)) {
-            logger.error("network train predict phase with error[code:%d, message:%s]", getCode(predictResult), getMessage(predictResult));
-            return predictResult;
-        }
-        releaseResult(predictResult);
+        predict(this, getDataForTrain(trainData));
 
         OutputLayer *outputLayer = this->outputLayer;
-        Result *lossResult = loss(outputLayer, getLabelForTrain(trainData));
-        if (!success(lossResult)) {
-            logger.error("network train with loss error[code:%d, message:%s]", getCode(lossResult), getMessage(lossResult));
-            return lossResult;
-        } else {
-            float lossValue = getValue(lossResult);
-            releaseResult(lossResult);
-            logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
-        }
+        float lossValue = loss(outputLayer, getLabelForTrain(trainData));
+        logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
 
         BaseLayer *baseLayer = (BaseLayer*)outputLayer;
-        Result *backwardResult =  backward(baseLayer, getLabelForTrain(trainData));
-        if (!success(backwardResult)) {
-            logger.error("network train backward phase with error[code:%d, message:%s]", getCode(backwardResult), getMessage(backwardResult));
-            return backwardResult;
-        }
-        releaseResult(backwardResult);
-
-        Result *optimizeResult = optimize(baseLayer, this->learnRateValue);
-        if (!success(optimizeResult)) {
-            logger.error("network train optimize phase with error[code:%d, message:%s]", getCode(optimizeResult), getMessage(optimizeResult));
-            return optimizeResult;
-        }
-        releaseResult(optimizeResult);
+        backward(baseLayer, getLabelForTrain(trainData));
+        optimize(baseLayer, this->learnRateValue);
     }
-    return createResultWithoutData(SUCCESS, NULL);
+    return true;
 }
 
-Result* validate(NeuralNetwork *this, TrainBatch *validateBatch) {
+bool validate(NeuralNetwork *this, TrainBatch *validateBatch) {
     int validateDataCount = getTrainDataCount(validateBatch);
     float percentage = 0.0;
     int successCount = 0;
     for (int i=0;i<validateDataCount;++i) {
         TrainData *validateData = getTrainData(validateBatch, i);
-        Result *predictResult = predict(this, getDataForTrain(validateData));
-        if (!success(predictResult)) {
-            logger.error("network validation predict phase with error[code:%d, message:%s]", getCode(predictResult), getMessage(predictResult));
-            return predictResult;
-        }
-    
-        Vector *predictVector = (Vector *)getData(predictResult);
+        Vector *predictVector = predict(this, getDataForTrain(validateData));
         Vector *labelVector = getLabelForTrain(validateData);
-        releaseResult(predictResult);
 
         int predictValue = getLabelValueFromOneHot(predictVector);
         int labelValue = getLabelValueFromOneHot(labelVector);
@@ -155,18 +127,13 @@ Result* validate(NeuralNetwork *this, TrainBatch *validateBatch) {
 
     percentage = (successCount * 100.0f / validateDataCount);
     logger.info("network validation predict with final success rate:%.2f%%", percentage);
-    return createResultWithoutData(SUCCESS, NULL);
+    return true;
 }
 
-Result* predict(NeuralNetwork *this, Vector *vector) {
+Vector* predict(NeuralNetwork *this, Vector *vector) {
     InputLayer *inputLayer = this->inputLayer;
     OutputLayer *outputLayer = this->outputLayer;
-    Result *inputResult = input(inputLayer, vector);
-    if (!success(inputResult)) {
-        logger.error("network predict with error[code:%d, message:%s]", getCode(inputResult), getMessage(inputResult));
-        return inputResult;
-    }
-    releaseResult(inputResult);
+    input(inputLayer, vector);
     return output(outputLayer);
 }
 

@@ -1,9 +1,10 @@
 #include <stdlib.h>
 
 #include "../common/common.h"
-#include "../result/result.h"
 #include "../memory/memory.h"
 #include "../random/random.h"
+#include "../except/exception.h"
+#include "../except/assertion.h"
 
 #include "bias.h"
 #include "vector.h"
@@ -14,6 +15,8 @@ struct Bias {
 
     int count;
 };
+
+static Exception MemoryAllocException = {MemoryAllocExceptionType};
 
 Bias* createBias(int dimensionCount, Random random) {
     Bias *bias = (Bias*)allocate(sizeof(Bias));
@@ -26,6 +29,8 @@ Bias* createBias(int dimensionCount, Random random) {
                 bias->elements[i] = random();
             }
         }
+    } else {
+        throw(&MemoryAllocException, "can not allocate memory for bias creation.");
     }
     return bias;
 }
@@ -44,54 +49,41 @@ void releaseBias(Bias *this) {
     }
 }
 
-Result* copyBias(Bias *this, Vector *vector) {
-    if (this == NULL || vector == NULL) {
-        char *message = "bias or vector instance is null for copy operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void copyBias(Bias *this, Vector *target) {
 
-    if (this->count != getElementCount(vector)) {
-        char *message = "bias and vector does not match for copy operation^o^";
-        return createResultWithoutData(VECTOR_NOT_MATCH, message);
-    }
+    assertNotNull(this, "bias instance is null for copy from vector operation!");
+    assertNotNull(target, "vector instance is null for copy from vector operation!");
+
+    assertDataMatch(this->count, getElementCount(target), "bias and vector does not match for copy from vector operation!");
 
     for (int i=0;i<this->count;++i) {
-        float vectorValue = getVectorValue(vector, i);
+        float vectorValue = getVectorValue(target, i);
         setBiasValue(this, i, vectorValue);
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* subBias(Bias *this, Bias *bias) {
-    if (this == NULL || bias == NULL) {
-        char *message = "bias instance is null for addition operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void subBias(Bias *this, Bias *target) {
+    
+    assertNotNull(this, "bias instance is null for copy from vector operation!");
+    assertNotNull(target, "bias instance is null for copy from vector operation!");
 
-    if (this->count != bias->count) {
-        char *message = "bias does not match for addition operation^o^";
-        return createResultWithoutData(VECTOR_NOT_MATCH, message);
-    }
+    assertDataMatch(this->count, target->count, "bias does not match for addition operation!");
 
     for (int i=0;i<this->count;++i) {
         float thisValue = this->elements[i];
-        float biasValue = bias->elements[i];
-        this->elements[i] = thisValue - biasValue;
+        float targetValue = target->elements[i];
+        this->elements[i] = thisValue - targetValue;
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
-Result* mulBiasNumber(Bias *this, float number) {
-    if (this == NULL) {
-        char *message = "bias instance is null for multiplication operation^o^";
-        return createResultWithoutData(INSTANCE_IS_NULL, message);
-    }
+void mulBiasNumber(Bias *this, float number) {
+
+    assertNotNull(this, "bias instance is null for number multiplication operation!");
 
     for (int i=0;i<this->count;++i) {
         float value = this->elements[i];
         this->elements[i] = value * number;
     }
-    return createResultWithoutData(SUCCESS, NULL);
 }
 
 float getBiasValue(Bias *this, int index) {
