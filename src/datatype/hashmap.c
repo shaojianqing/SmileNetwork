@@ -8,17 +8,49 @@
 #include "datatype.h"
 #include "hashmap.h"
 
-static int put(HashMap *this, Object *key, Object *value);
+#define LIMIT_FACTOR 0.75
 
-static Object* get(HashMap *this, Object *key);
+typedef struct Entry Entry;
 
-static int getCount(HashMap *this);
+typedef struct HashMap HashMap;
+
+struct Entry {
+	
+	Object *key;
+	
+	Object *value;
+
+	Entry *next;
+};
+
+struct HashMap {
+
+	Map map;
+	
+	Entry **table;
+
+	int count;
+
+	int limit;
+
+	int capacity;
+
+	HashCode hashCode;
+
+	EqualFunc equalFunc;
+};
+
+static int put(Map *this, Object *key, Object *value);
+
+static Object* get(Map *this, Object *key);
+
+static int removeByKey(Map *this, Object *key);
+
+static bool containsKey(Map *this, Object *key);
+
+static int getCount(Map *this);
 
 static int reHash(HashMap *this);
-
-static int removeByKey(HashMap *this, Object *key);
-
-static bool containsKey(HashMap *this, Object *key);
 
 static int putInner(HashMap *this, Object *key, Object *value);
 
@@ -26,41 +58,44 @@ static void reBuildMap(HashMap *this, Entry **table, Entry *entry, int capacity)
 
 static Entry* getEntryByKey(HashMap *this, Object *key);
 
-HashMap* createHashMap(HashCode hashCode, EqualFunc equalFunc, int capacity) {
-	if (hashCode!=NULL && capacity>0) {
-		HashMap *map = (HashMap *)malloc(sizeof(HashMap));
-		if (map!=NULL) {
-			map->count = 0;
-			map->capacity = capacity;
-			map->table = malloc(sizeof(Entry *)*capacity);
-			memset(map->table, 0, sizeof(Entry *)*capacity);
-			map->limit = capacity * LIMIT_FACTOR;
+Map* createHashMap(HashCode hashCode, EqualFunc equalFunc, int capacity) {
+	if (hashCode != NULL && equalFunc != NULL && capacity > 0) {
+		HashMap *hashMap = (HashMap *)malloc(sizeof(HashMap));
+		if (hashMap != NULL) {
+			Map *map = (Map*)hashMap;
 			map->containsKey = containsKey;
 			map->remove = removeByKey;
-			map->hashCode = hashCode;
-			map->equalFunc = equalFunc;
 			map->getCount = getCount;
 			map->put = put;
-			map->get = get;			
+			map->get = get;	
+
+			hashMap->count = 0;
+			hashMap->capacity = capacity;
+			hashMap->table = malloc(sizeof(Entry *)*capacity);
+			memset(hashMap->table, 0, sizeof(Entry *)*capacity);
+			hashMap->limit = capacity * LIMIT_FACTOR;
+			hashMap->hashCode = hashCode;
+			hashMap->equalFunc = equalFunc;		
 		}
-		return map;
+		return (Map*)hashMap;
 	} else {
 		return NULL;	
 	}
 }
 
-static int put(HashMap *this, Object *key, Object *value) {
-	if (this!=NULL && key!=NULL && value!=NULL) {
-		if (this->count >= this->limit) {
-			if (reHash(this)==STATUS_SUCCESS) {
-				if (putInner(this, key, value)) {
-					this->count++;
+static int put(Map *this, Object *key, Object *value) {
+	if (this != NULL && key != NULL && value != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		if (hashMap->count >= hashMap->limit) {
+			if (reHash(hashMap)==STATUS_SUCCESS) {
+				if (putInner(hashMap, key, value)) {
+					hashMap->count++;
 					return STATUS_SUCCESS;				
 				}
 			}		
 		} else {
-			if (putInner(this, key, value)) {
-				this->count++;
+			if (putInner(hashMap, key, value)) {
+				hashMap->count++;
 				return STATUS_SUCCESS;				
 			}	
 		}		
@@ -68,13 +103,14 @@ static int put(HashMap *this, Object *key, Object *value) {
 	return STATUS_FAILURE;
 }
 
-static Object* get(HashMap *this, Object *key) {
-	if (this!=NULL && key!=NULL) {
-		int hashCode = this->hashCode(key);
-		int index = (hashCode & (this->capacity-1));
-		Entry *entry = this->table[index];
-		while(entry!=NULL) {
-			if (this->equalFunc(entry->key, key)) {
+static Object* get(Map *this, Object *key) {
+	if (this != NULL && key != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		int hashCode = hashMap->hashCode(key);
+		int index = (hashCode & (hashMap->capacity-1));
+		Entry *entry = hashMap->table[index];
+		while(entry != NULL) {
+			if (hashMap->equalFunc(entry->key, key)) {
 				return entry->value;			
 			}
 			entry = entry->next;		
@@ -83,33 +119,35 @@ static Object* get(HashMap *this, Object *key) {
 	return NULL;
 }
 
-static int getCount(HashMap *this) {
-	if (this!=NULL) {
-		return this->count;	
+static int getCount(Map *this) {
+	if (this != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		return hashMap->count;	
 	} else {
 		return 0;
 	}
 }
 
-static int removeByKey(HashMap *this, Object *key) {
-	if (this!=NULL && key!=NULL) {
-		int hashCode = this->hashCode(key);
-		int index = (hashCode & (this->capacity-1));
-		Entry *entry = this->table[index];
+static int removeByKey(Map *this, Object *key) {
+	if (this != NULL && key != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		int hashCode = hashMap->hashCode(key);
+		int index = (hashCode & (hashMap->capacity-1));
+		Entry *entry = hashMap->table[index];
 		if (entry!=NULL) {
-			if (this->equalFunc(entry->key, key)) {
-				this->table[index] = entry->next;
+			if (hashMap->equalFunc(entry->key, key)) {
+				hashMap->table[index] = entry->next;
 				free(entry);
-				this->count--;
+				hashMap->count--;
 				return STATUS_SUCCESS;
 			} else {
 				Entry *prev = entry;
 				entry = entry->next;
-				while (entry!=NULL) {
-					if (this->equalFunc(entry->key, key)) {
+				while (entry != NULL) {
+					if (hashMap->equalFunc(entry->key, key)) {
 						prev->next = entry->next;
 						free(entry);
-						this->count--;
+						hashMap->count--;
 						return STATUS_SUCCESS; 
 					} else {
 						prev = entry;
@@ -122,13 +160,14 @@ static int removeByKey(HashMap *this, Object *key) {
 	return STATUS_FAILURE;
 }
 
-static bool containsKey(HashMap *this, Object *key) {
-	if (this!=NULL && key!=NULL) {
-		int hashCode = this->hashCode(key);
-		int index = (hashCode & (this->capacity-1));
-		Entry *entry = this->table[index];
+static bool containsKey(Map *this, Object *key) {
+	if (this != NULL && key != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		int hashCode = hashMap->hashCode(key);
+		int index = (hashCode & (hashMap->capacity-1));
+		Entry *entry = hashMap->table[index];
 		while (entry!=NULL) {
-			if (this->equalFunc(entry->key, key)) {
+			if (hashMap->equalFunc(entry->key, key)) {
 				return true;			
 			}
 			entry = entry->next;
@@ -206,22 +245,23 @@ static Entry* getEntryByKey(HashMap *this, Object *key) {
 	return NULL;
 }
 
-void releaseHashMap(HashMap* this) {
-	if (this!=NULL) {
-		int capacity = this->capacity;
+void releaseHashMap(Map* this) {
+	if (this != NULL) {
+		HashMap *hashMap = (HashMap*)this;
+		int capacity = hashMap->capacity;
 		int i=0;
 		for (i=0;i<capacity;++i) {
-			Entry *entry = this->table[i];			
+			Entry *entry = hashMap->table[i];			
 			Entry *nextEntry = NULL;
 			while(entry!=NULL) {
 				nextEntry = entry->next;
 				free(entry);
 				entry = nextEntry;	
 			}
-			this->table[i] = NULL;	
+			hashMap->table[i] = NULL;	
 		}
-		free(this->table);
-		free(this);			
+		free(hashMap->table);
+		free(hashMap);			
 	}
 }
 

@@ -2,9 +2,9 @@
 
 #include "../common/common.h"
 #include "../memory/memory.h"
-#include "../random/random.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 
 #include "bias.h"
 #include "vector.h"
@@ -18,15 +18,15 @@ struct Bias {
 
 static Exception MemoryAllocException = {MemoryAllocExceptionType};
 
-Bias* createBias(int dimensionCount, Random random) {
+Bias* createBias(int dimensionCount, Generator generator) {
     Bias *bias = (Bias*)allocate(sizeof(Bias));
     if (bias != NULL) {
         bias->elements = (float *)allocate(sizeof(float)*dimensionCount);
         bias->count = dimensionCount;
 
-        if (random != NULL) {
+        if (generator != NULL) {
             for (int i=0;i<dimensionCount;++i) {
-                bias->elements[i] = random();
+                bias->elements[i] = generator();
             }
         }
     } else {

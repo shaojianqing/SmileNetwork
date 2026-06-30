@@ -8,103 +8,125 @@
 #include "datatype.h"
 #include "arraylist.h"
 
-static int getSize(ArrayList *this);
+typedef struct ArrayList {
 
-static bool add(ArrayList *this, Object *object);
+	List list;
+	
+	Object **dataList;
 
-static Object* get(ArrayList *this, int index);
+	int capacity;
 
-static bool removeByObject(ArrayList *this, Object *object);
+	int size;
 
-static bool containsObject(ArrayList *this, Object *object);
+	EqualFunc equal;
+
+} ArrayList;
+
+static int getSize(List *this);
+
+static bool add(List *this, Object *object);
+
+static Object* get(List *this, int index);
+
+static bool removeByObject(List *this, Object *object);
+
+static bool containsObject(List *this, Object *object);
 
 static bool expandArrayList(ArrayList *this);
 
 static bool addInner(ArrayList *this, Object *object);
 
-ArrayList *createArrayList(EqualFunc equalFunc, int capacity) {
-	if (equalFunc!=NULL && capacity>0) {
+List *createArrayList(EqualFunc equal, int capacity) {
+	if (equal != NULL && capacity > 0) {
 		ArrayList *arrayList = (ArrayList *)malloc(sizeof(ArrayList));
 		if (arrayList!=NULL) {
-			arrayList->list = malloc(sizeof(Object *)*capacity);
-			memset(arrayList->list, 0, sizeof(Object *)*capacity);
-            arrayList->size = 0;
-
+			arrayList->dataList = malloc(sizeof(Object *)*capacity);
+			memset(arrayList->dataList, 0, sizeof(Object *)*capacity);
+			arrayList->equal = equal;
 			arrayList->capacity = capacity;
-			arrayList->add = add;
-			arrayList->get = get;			
-			arrayList->getSize = getSize;
-			arrayList->equalFunc = equalFunc;
-			arrayList->remove = removeByObject;
-			arrayList->containsObject = containsObject;
+            arrayList->size = 0;
+			
+			List *list = (List*)arrayList;
+
+			list->add = add;
+			list->get = get;			
+			list->getSize = getSize;
+			list->remove = removeByObject;
+			list->containsObject = containsObject;
 		}
-		return arrayList;
+		return (List *)arrayList;
 	} else {
 		return NULL;
 	}
 }
 
-void releaseArrayList(ArrayList *this) {
-	if (this!=NULL) {
-		free(this->list);
+void releaseArrayList(List *this) {
+	if (this != NULL) {
+		ArrayList *arrayList = (ArrayList *)this;
+		free(arrayList->dataList);
 		free(this);
 	}
 }
 
-static int getSize(ArrayList *this) {
-	if (this!=NULL) {
-		return this->size;	
-	} else {
-		return 0;
+static int getSize(List *this) {
+	if (this != NULL) {
+		ArrayList *arrayList = (ArrayList *)this;
+		return arrayList->size;	
 	}
+	return 0;
 }
 
-static bool add(ArrayList *this, Object *object) {
-	if (this!=NULL && object!=NULL) {
-		if (this->size>=this->capacity) {
-			expandArrayList(this);
+static bool add(List *this, Object *object) {
+	if (this != NULL && object != NULL) {
+		ArrayList *arrayList = (ArrayList *)this;
+		if (arrayList->size >= arrayList->capacity) {
+			expandArrayList(arrayList);
 		}
-		addInner(this, object);
+		addInner(arrayList, object);
 		return true;
 	}
 	return false;
 }
 
-static Object* get(ArrayList *this, int index) {
-	if (this!=NULL && index>=0 && index<this->size) {
-		return this->list[index];	
+static Object* get(List *this, int index) {
+	if (this != NULL) {
+		ArrayList *arrayList = (ArrayList *)this;
+		if (index >= 0 && index < arrayList->size) {
+			return arrayList->dataList[index];	
+		}
 	}
 	return NULL;
 }
 
-static bool removeByObject(ArrayList *this, Object *object) {
-	if (this!=NULL && object!=NULL) {
+static bool removeByObject(List *this, Object *object) {
+	if (this != NULL && object != NULL) {
+		ArrayList *arrayList = (ArrayList*)this;
 		int i=0, j=0;
-		while (i<this->size) {
-			if (this->equalFunc(this->list[i], object)) {
+		while (i<arrayList->size) {
+			if (arrayList->equal(arrayList->dataList[i], object)) {
 				break;
 			}
 			i++;		
 		}
 		j=i;
-		while(j<this->size-1) {
-			this->list[j]=this->list[j+1];
+		while(j<arrayList->size-1) {
+			arrayList->dataList[j]=arrayList->dataList[j+1];
 			j++;		
 		}	
-		this->list[this->size-1] = NULL;
-		this->size--;
+		arrayList->dataList[arrayList->size-1] = NULL;
+		arrayList->size--;
 		return true;
 	}
 	return false;
 }
 
-static bool containsObject(ArrayList *this, Object *object) {
-	if (this!=NULL && object!=NULL) {
-		int i=0;
-		while (i<this->size) {
-			if (this->equalFunc(this->list[i], object)) {
+static bool containsObject(List *this, Object *object) {
+	if (this != NULL && object != NULL) {
+		ArrayList *arrayList = (ArrayList*)this;
+		for (int i=0;i<arrayList->size;++i) {
+			if (arrayList->equal(arrayList->dataList[i], object)) {
 				return true;
-			}		
+			}	
 		}
 	}
 	return false;
@@ -112,14 +134,14 @@ static bool containsObject(ArrayList *this, Object *object) {
 
 static bool addInner(ArrayList *this, Object *object) {
 	int index = this->size;
-	this->list[index] = object;
+	this->dataList[index] = object;
 	this->size++;
     return true;
 }
 
 static bool expandArrayList(ArrayList *this) {
 	int newCapacity = this->capacity*2;
-	Object **oldList = this->list;
+	Object **oldList = this->dataList;
 	Object **newList = malloc(sizeof(Object *)*newCapacity);
 	if (newList!=NULL) {
 		memset(newList, 0, sizeof(Object *)*newCapacity);
@@ -127,7 +149,7 @@ static bool expandArrayList(ArrayList *this) {
 		for(i=0;i<this->size;++i) {
 			newList[i] = oldList[i];		
 		}	
-		this->list = newList;
+		this->dataList = newList;
 		this->capacity = newCapacity;
 		free(oldList);
 		return true;

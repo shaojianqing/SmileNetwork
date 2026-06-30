@@ -37,16 +37,16 @@ bool isTypeOfException(char *type, Exception *exception) {
 
 void pushStackFrame(StackFrame *stackFrame) {
     if (stackFrame != NULL) {
-        push(callFrameStack, stackFrame);
+        callFrameStack->push(callFrameStack, stackFrame);
     }
 }
 
 StackFrame* popStackFrame() {
-    return pop(callFrameStack);
+    return callFrameStack->pop(callFrameStack);
 }
 
 void throwException(Exception *exception, char *message, char *filename, int line) {
-    StackFrame *stackFrame = (StackFrame*)pop(callFrameStack);
+    StackFrame *stackFrame = (StackFrame*)callFrameStack->pop(callFrameStack);
     if (stackFrame != NULL) {
         exception->message = message;
         exception->filename = filename;

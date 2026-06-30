@@ -4,7 +4,6 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
-#include "../random/random.h"
 #include "../memory/memory.h"
 #include "../logger/logger.h"
 #include "../except/exception.h"
@@ -15,11 +14,12 @@
 #include "../dataset/train.h"
 #include "../network/config.h"
 #include "../network/activator.h"
+#include "../generator/generator.h"
 #include "../network/bias.h"
 #include "../network/loss.h"
 #include "../network/vector.h"
 #include "../network/matrix.h"
-#include "../network/layer.h"
+#include "../network/linear.h"
 #include "../network/network.h"
 
 #include "command.h"
@@ -32,14 +32,14 @@ void loadConfigExecutor(Command *command) {
         String *name = getCommandName(command);
         String *parameter = getCommandParam(command);
         
-        NetworkConfig *config = loadNetworkConfig(parameter->getValue(parameter));
-        NeuralNetwork *network = getNeuralNetwork();
+        DeepNetworkConfig *config = loadNetworkConfig(parameter->getValue(parameter));
+        DeepNeuralNetwork *network = getDeepNeuralNetwork();
         if (network != NULL) {
-            releaseNeuralNetwork(network);
+            releaseDeepNeuralNetwork(network);
         }
 
-        bool success = constructNeuralNetwork(config);
-        releaseNetworkConfig(config);
+        bool success = constructDeepNeuralNetwork(config);
+        releaseDeepNetworkConfig(config);
         if (success) {
             printMessage(WHITE, "Neural network has been constructed and initialized successfully^+^");
         } else {
@@ -136,7 +136,7 @@ void loadMnistLabelExecutor(Command *command) {
 
 void startTrainExecutor(Command *command) {
     try {
-        NeuralNetwork *neuralNetwork = getNeuralNetwork();
+        DeepNeuralNetwork *neuralNetwork = getDeepNeuralNetwork();
         if (neuralNetwork == NULL) {
             printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
             return;
@@ -179,7 +179,7 @@ void predictExecutor(Command *command) {
 
 void validateExecutor(Command *command) {
     try {
-        NeuralNetwork *neuralNetwork = getNeuralNetwork();
+        DeepNeuralNetwork *neuralNetwork = getDeepNeuralNetwork();
         if (neuralNetwork == NULL) {
             printMessage(RED, "Neural network has not been initialized, please initialize network firstly^o^");
             return;
@@ -210,7 +210,7 @@ void quitExecutor(Command *command) {
 }
 
 bool loadConfigRequireConfirm(Command *command) {
-    NeuralNetwork *network = getNeuralNetwork();
+    DeepNeuralNetwork *network = getDeepNeuralNetwork();
     if (network != NULL) {
         printMessage(YELLOW, "Do you really want to load model configuration from file[Yes|No]??");
         return true;

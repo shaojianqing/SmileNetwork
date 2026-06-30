@@ -2,7 +2,7 @@ typedef struct Bias Bias;
 
 typedef struct Vector Vector;
 
-Bias* createBias(int dimensionCount, Random random);
+Bias* createBias(int dimensionCount, Generator generator);
 
 void releaseBias(Bias *this);
 

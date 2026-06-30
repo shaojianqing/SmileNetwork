@@ -1,39 +1,45 @@
-typedef struct LayerConfig LayerConfig;
+typedef struct ConvLayerConfig ConvLayerConfig;
 
-typedef struct NetworkConfig NetworkConfig;
+typedef struct PoolLayerConfig PoolLayerConfig;
+
+typedef struct LinearLayerConfig LinearLayerConfig;
+
+typedef struct DeepNetworkConfig DeepNetworkConfig;
+
+typedef struct ConvNetworkConfig ConvNetworkConfig;
 
 typedef enum ActivatorKind ActivatorKind;
 
 typedef enum ActivatorLossKind ActivatorLossKind;
 
-NetworkConfig* loadNetworkConfig(char *filepath);
+DeepNetworkConfig* loadNetworkConfig(char *filepath);
 
-void releaseNetworkConfig(NetworkConfig *config);
+void releaseDeepNetworkConfig(DeepNetworkConfig *config);
 
-int getTrainConfigBatchSize(NetworkConfig *config);
+int getTrainConfigBatchSize(DeepNetworkConfig *config);
 
-int getTrainConfigEpochCount(NetworkConfig *config);
+int getTrainConfigEpochCount(DeepNetworkConfig *config);
 
-float getLearnRateConfigValue(NetworkConfig *config);
+float getLearnRateConfigValue(DeepNetworkConfig *config);
 
-int getHiddenLayerConfigCount(NetworkConfig *config);
+int getHiddenLayerConfigCount(DeepNetworkConfig *config);
 
-LayerConfig* getInputLayerConfig(NetworkConfig *config);
+LinearLayerConfig* getInputLayerConfig(DeepNetworkConfig *config);
 
-LayerConfig* getOutputLayerConfig(NetworkConfig *config);
+LinearLayerConfig* getOutputLayerConfig(DeepNetworkConfig *config);
 
-LayerConfig** getHiddenLayerConfigList(NetworkConfig *config);
+LinearLayerConfig** getHiddenLayerConfigList(DeepNetworkConfig *config);
 
 
-bool isOutputLayer(LayerConfig *config);
+bool isOutputLayer(LinearLayerConfig *config);
 
-int getMatrixConfigRowCount(LayerConfig *config);
+int getMatrixConfigRowCount(LinearLayerConfig *config);
 
-int getMatrixConfigColumnCount(LayerConfig *config);
+int getMatrixConfigColumnCount(LinearLayerConfig *config);
 
-int getBiasConfigDimensionCount(LayerConfig *config);
+int getBiasConfigDimensionCount(LinearLayerConfig *config);
 
-ActivatorKind getConfigActivatorKind(LayerConfig *config);
+ActivatorKind getConfigActivatorKind(LinearLayerConfig *config);
 
-ActivatorLossKind getConfigActivatorLossKind(LayerConfig *config);
+ActivatorLossKind getConfigActivatorLossKind(LinearLayerConfig *config);
 

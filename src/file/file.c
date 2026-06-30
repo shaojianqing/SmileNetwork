@@ -23,7 +23,7 @@ struct File {
 extern Logger logger;
 
 static Exception MemoryAllocException = {MemoryAllocExceptionType};
-static Exception FileReadException = {FileOperateExceptionType};
+static Exception FileOperateException = {FileOperateExceptionType};
 
 File* openFile(const char *filepath, int flags) {
     int fd = open(filepath, flags);
@@ -84,7 +84,7 @@ char* readCharString(File *this) {
             break;
         } else if (num < 0) {
             release(string);
-            throw(&FileReadException, "fail to read char string for file operation error.");
+            throw(&FileOperateException, "fail to read char string for file operation error.");
         }
         count += num;
     }
@@ -110,7 +110,7 @@ byte* readByteBuffer(File *this) {
             break;
         } else if (num < 0) {
             release(buffer);
-            throw(&FileReadException, "fail to read byte buffer for file operation error.");
+            throw(&FileOperateException, "fail to read byte buffer for file operation error.");
         }
         count += num;
     }

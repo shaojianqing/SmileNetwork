@@ -1,21 +1,31 @@
 typedef struct Vector Vector;
 
-typedef struct NetworkConfig NetworkConfig;
+typedef struct Tensor Tensor;
 
-typedef struct NeuralNetwork NeuralNetwork;
+typedef struct DeepNetworkConfig DeepNetworkConfig;
 
-bool constructNeuralNetwork(NetworkConfig *config);
+typedef struct ConvNetworkConfig ConvNetworkConfig;
 
-void releaseNeuralNetwork(NeuralNetwork *network);
+typedef struct DeepNeuralNetwork DeepNeuralNetwork;
 
-bool train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch);
+typedef struct ConvNeuralNetwork ConvNeuralNetwork;
 
-bool validate(NeuralNetwork *this, TrainBatch *trainBatch);
+bool constructDeepNeuralNetwork(DeepNetworkConfig *config);
 
-Vector* predict(NeuralNetwork *this, Vector *vector);
+bool constructConvNeuralNetwork(ConvNetworkConfig *config);
 
-int getTrainEpochCount(NeuralNetwork *this);
+void releaseDeepNeuralNetwork(DeepNeuralNetwork *network);
 
-int getTrainBatchSize(NeuralNetwork *this);
+void releaseConvNeuralNetwork(ConvNeuralNetwork *network);
 
-NeuralNetwork* getNeuralNetwork();
+bool train(DeepNeuralNetwork *this, TrainBatch *trainBatch, int epoch);
+
+bool validate(DeepNeuralNetwork *this, TrainBatch *trainBatch);
+
+Vector* predict(DeepNeuralNetwork *this, Vector *vector);
+
+int getTrainEpochCount(DeepNeuralNetwork *this);
+
+int getTrainBatchSize(DeepNeuralNetwork *this);
+
+DeepNeuralNetwork* getDeepNeuralNetwork();

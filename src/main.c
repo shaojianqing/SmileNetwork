@@ -7,7 +7,7 @@
 #include "datatype/datatype.h"
 #include "datatype/stringtype.h"
 #include "logger/logger.h"
-#include "random/random.h"
+#include "generator/generator.h"
 #include "except/exception.h"
 #include "command/command.h"
 #include "network/bias.h"

@@ -3,10 +3,10 @@
 #include "../common/common.h"
 #include "../common/constant.h"
 #include "../memory/memory.h"
-#include "../random/random.h"
 #include "../logger/logger.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 
 #include "bias.h"
 #include "config.h"
@@ -15,9 +15,9 @@
 #include "matrix.h"
 #include "optimizer.h"
 #include "loss.h"
-#include "layer.h"
+#include "linear.h"
 
-struct BaseLayer {
+struct VectorLayer {
 
     Bias *modelBias;
 
@@ -29,9 +29,9 @@ struct BaseLayer {
 
     Matrix *gradientMatrix;
 
-    BaseLayer *prevLayer;
+    VectorLayer *prevLayer;
 
-    BaseLayer *nextLayer;
+    VectorLayer *nextLayer;
 
     Vector *inputVector;
 
@@ -39,52 +39,52 @@ struct BaseLayer {
 
     Optimizer optimizer;
 
-    void (*forward)(BaseLayer *this, Vector *vector);
+    void (*forward)(VectorLayer *this, Vector *vector);
 
-    void (*backward)(BaseLayer *this, Vector *target);
+    void (*backward)(VectorLayer *this, Vector *target);
 
-    void (*optimize)(BaseLayer *this, float learnRate);
+    void (*optimize)(VectorLayer *this, float learnRate);
 };
 
 struct InputLayer {
 
-    BaseLayer baseLayer;
+    VectorLayer baseLayer;
 };
 
 struct OutputLayer {
 
-    BaseLayer baseLayer;
+    VectorLayer baseLayer;
 
     ActivatorLossFunc activatorLossFunc;
 
     ActivatorGradientFunc activatorGradientFunc;
 };
 
-struct LinearLayer {
+struct AffineLayer {
 
-    BaseLayer baseLayer;
+    VectorLayer baseLayer;
 };
 
 extern Logger logger;
 
-static void releaseBaselayer(BaseLayer *baseLayer);
+static void releaseBaselayer(VectorLayer *baseLayer);
 
-static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config);
+static bool prepareBaselayer(VectorLayer *baseLayer, LinearLayerConfig *config);
 
-static void backwardInner(BaseLayer *this, Vector *target);
+static void backwardInner(VectorLayer *this, Vector *target);
 
-static void backwardOutput(BaseLayer *this, Vector *target);
+static void backwardOutput(VectorLayer *this, Vector *target);
 
-static void forwardInner(BaseLayer *this, Vector *vector);
+static void forwardInner(VectorLayer *this, Vector *vector);
 
-static void forwardOutput(BaseLayer *this, Vector *vector);
+static void forwardOutput(VectorLayer *this, Vector *vector);
 
-static void optimizeInner(BaseLayer *this, float learnRate);
+static void optimizeInner(VectorLayer *this, float learnRate);
 
-InputLayer* buildInputLayer(LayerConfig *config) {
+InputLayer* buildInputLayer(LinearLayerConfig *config) {
     InputLayer *inputLayer = (InputLayer*)allocate(sizeof(InputLayer));
     if (inputLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)inputLayer;
+        VectorLayer *baseLayer = (VectorLayer*)inputLayer;
         baseLayer->backward = backwardInner;
         baseLayer->optimize = optimizeInner;
         baseLayer->optimizer = SGDOptimizer;
@@ -97,10 +97,10 @@ InputLayer* buildInputLayer(LayerConfig *config) {
     return inputLayer;
 }
 
-OutputLayer* buildOutputLayer(LayerConfig *config) {
+OutputLayer* buildOutputLayer(LinearLayerConfig *config) {
     OutputLayer *outputLayer = (OutputLayer*)allocate(sizeof(OutputLayer));
     if (outputLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)outputLayer;
+        VectorLayer *baseLayer = (VectorLayer*)outputLayer;
         baseLayer->forward = forwardOutput;
         baseLayer->backward = backwardOutput;
         baseLayer->optimize = optimizeInner;
@@ -144,24 +144,24 @@ OutputLayer* buildOutputLayer(LayerConfig *config) {
     return outputLayer;
 }
 
-LinearLayer* buildLinearLayer(LayerConfig *config) {
-    LinearLayer *linearLayer = (LinearLayer*)allocate(sizeof(LinearLayer));
-    if (linearLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)linearLayer;
+AffineLayer* buildAffineLayer(LinearLayerConfig *config) {
+    AffineLayer *affineLayer = (AffineLayer*)allocate(sizeof(AffineLayer));
+    if (affineLayer != NULL) {
+        VectorLayer *baseLayer = (VectorLayer*)affineLayer;
         baseLayer->forward = forwardInner;
         baseLayer->backward = backwardInner;
         baseLayer->optimize = optimizeInner;
         baseLayer->optimizer = SGDOptimizer;
         bool success = prepareBaselayer(baseLayer, config);
         if (!success) {
-            releaseLinearLayer(linearLayer);
+            releaseAffineLayer(affineLayer);
             return NULL;
         }
     }
-    return linearLayer;
+    return affineLayer;
 }
 
-static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
+static bool prepareBaselayer(VectorLayer *baseLayer, LinearLayerConfig *config) {
     int matrixConfigRowCount = getMatrixConfigRowCount(config);
     int matrixConfigColumnCount = getMatrixConfigColumnCount(config);
     Matrix *modelMatrix = createMatrix(matrixConfigRowCount, matrixConfigColumnCount, matrixGenerator);
@@ -194,7 +194,7 @@ static bool prepareBaselayer(BaseLayer *baseLayer, LayerConfig *config) {
 
 void releaseInputLayer(InputLayer *inputLayer) {
     if (inputLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)inputLayer;
+        VectorLayer *baseLayer = (VectorLayer*)inputLayer;
         releaseBaselayer(baseLayer);
         release(inputLayer);
     }
@@ -202,21 +202,21 @@ void releaseInputLayer(InputLayer *inputLayer) {
 
 void releaseOutputLayer(OutputLayer *outputLayer) {
     if (outputLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)outputLayer;
+        VectorLayer *baseLayer = (VectorLayer*)outputLayer;
         releaseBaselayer(baseLayer);
         release(outputLayer);
     }
 }
 
-void releaseLinearLayer(LinearLayer *linearLayer) {
-    if (linearLayer != NULL) {
-        BaseLayer *baseLayer = (BaseLayer*)linearLayer;
+void releaseAffineLayer(AffineLayer *affineLayer) {
+    if (affineLayer != NULL) {
+        VectorLayer *baseLayer = (VectorLayer*)affineLayer;
         releaseBaselayer(baseLayer);
-        release(linearLayer);
+        release(affineLayer);
     }
 }
 
-static void releaseBaselayer(BaseLayer *baseLayer) {
+static void releaseBaselayer(VectorLayer *baseLayer) {
     Matrix *modelMatrix = baseLayer->modelMatrix;
     Bias *modelBias = baseLayer->modelBias;
 
@@ -230,24 +230,24 @@ static void releaseBaselayer(BaseLayer *baseLayer) {
     releaseBias(gradientBias);
 }
 
-void forward(BaseLayer *this, Vector *vector) {
+void forward(VectorLayer *this, Vector *vector) {
     this->forward(this, vector);
 }
 
-void backward(BaseLayer *this, Vector *target) {
+void backward(VectorLayer *this, Vector *target) {
     this->backward(this, target);
 }
 
-void optimize(BaseLayer *this, float learnRate) {
+void optimize(VectorLayer *this, float learnRate) {
     this->optimize(this, learnRate);
 }
 
 void input(InputLayer *this, Vector *vector) {
-    forwardInner((BaseLayer*)this, vector);
+    forwardInner((VectorLayer*)this, vector);
 }
 
 Vector* output(OutputLayer *this) {
-    BaseLayer *baseLayer = (BaseLayer*)this;
+    VectorLayer *baseLayer = (VectorLayer*)this;
     return baseLayer->resultVector;
 }
 
@@ -255,19 +255,19 @@ float loss(OutputLayer *this, Vector *expect) {
 
     assertNotNull(this->activatorLossFunc, "loss function not configured for loss calculation!");
 
-    BaseLayer *baseLayer = (BaseLayer*)this;
+    VectorLayer *baseLayer = (VectorLayer*)this;
     return this->activatorLossFunc(baseLayer->resultVector, expect);
 }
 
-void setNextLayer(BaseLayer *this, BaseLayer *next) {
+void setNextLayer(VectorLayer *this, VectorLayer *next) {
     this->nextLayer = next;
 }
 
-void setPrevLayer(BaseLayer *this, BaseLayer *prev) {
+void setPrevLayer(VectorLayer *this, VectorLayer *prev) {
     this->prevLayer = prev;
 }
 
-static void forwardInner(BaseLayer *this, Vector *inputVector) {
+static void forwardInner(VectorLayer *this, Vector *inputVector) {
     Activator *activator = this->activator;
     Matrix *matrix = this->modelMatrix;
     Bias *bias = this->modelBias;
@@ -280,12 +280,12 @@ static void forwardInner(BaseLayer *this, Vector *inputVector) {
     releaseVector(innerVector);
     
     if (this->nextLayer != NULL) {
-        BaseLayer *nextLayer = this->nextLayer;
+        VectorLayer *nextLayer = this->nextLayer;
         nextLayer->forward(nextLayer, this->resultVector);
     }
 }
 
-static void forwardOutput(BaseLayer *this, Vector *inputVector) {
+static void forwardOutput(VectorLayer *this, Vector *inputVector) {
     Matrix *matrix = this->modelMatrix;
     Bias *bias = this->modelBias;
     
@@ -298,7 +298,7 @@ static void forwardOutput(BaseLayer *this, Vector *inputVector) {
     releaseVector(innerVector);
 }
     
-static void backwardInner(BaseLayer *this, Vector *prevGradientVector) {
+static void backwardInner(VectorLayer *this, Vector *prevGradientVector) {
 
     assertNotNull(this->activator, "activator instance not configured for gradient calculation!");
 
@@ -320,7 +320,7 @@ static void backwardInner(BaseLayer *this, Vector *prevGradientVector) {
     releaseVector(this->resultVector);
     this->resultVector = NULL;
 
-    BaseLayer *prevLayer = this->prevLayer;
+    VectorLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
         Matrix *modelMatrix = this->modelMatrix;
         Vector *prevGradientVector = mulMatrixVector(gradientVector, modelMatrix);
@@ -329,7 +329,7 @@ static void backwardInner(BaseLayer *this, Vector *prevGradientVector) {
     releaseVector(gradientVector);
 }
 
-static void backwardOutput(BaseLayer *this, Vector *target) {
+static void backwardOutput(VectorLayer *this, Vector *target) {
     
     OutputLayer *outputLayer = (OutputLayer*)this;
 
@@ -348,7 +348,7 @@ static void backwardOutput(BaseLayer *this, Vector *target) {
     releaseVector(this->resultVector);
     this->resultVector = NULL;
 
-    BaseLayer *prevLayer = this->prevLayer;
+    VectorLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
         Matrix *modelMatrix = this->modelMatrix;
         Vector *prevGradientVector = mulMatrixVector(gradientVector, modelMatrix);
@@ -357,7 +357,7 @@ static void backwardOutput(BaseLayer *this, Vector *target) {
     releaseVector(gradientVector); 
 }
 
-static void optimizeInner(BaseLayer *this, float learnRate) {
+static void optimizeInner(VectorLayer *this, float learnRate) {
     Bias *modelBias = this->modelBias;
     Matrix *modelMatrix = this->modelMatrix;
 
@@ -372,7 +372,7 @@ static void optimizeInner(BaseLayer *this, float learnRate) {
     this->gradientBias = NULL;
     this->gradientMatrix = NULL;
 
-    BaseLayer *prevLayer = this->prevLayer;
+    VectorLayer *prevLayer = this->prevLayer;
     if (prevLayer != NULL) {
         prevLayer->optimize(prevLayer, learnRate);
     }

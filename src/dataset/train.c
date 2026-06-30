@@ -2,9 +2,9 @@
 
 #include "../common/common.h"
 #include "../memory/memory.h"
-#include "../random/random.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 #include "../network/bias.h"
 #include "../network/vector.h"
 

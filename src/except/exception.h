@@ -57,6 +57,7 @@ struct Exception {
     e = &exception;                                                                                                     
 
 #define RuntimeExceptionType                               "RuntimeException"
+#define ValidationExceptionType                            "ValidationException"
 #define MemoryAllocExceptionType                           "MemoryAllocException"
 #define NullPointerExceptionType                           "NullPointerException"
 #define DataIllegalExceptionType                           "DataIllegalException"

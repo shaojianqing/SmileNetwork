@@ -6,8 +6,16 @@
 #include "exception.h"
 #include "assertion.h"
 
+Exception ValidationException = {ValidationExceptionType};
 Exception NullPointerException = {NullPointerExceptionType};
 Exception DataIllegalException = {DataIllegalExceptionType};
+
+void assertTrueReal(bool value, char *message, char *filename, int line) {
+    if (!value) {
+        Exception *exception = &ValidationException;
+        throwException(exception, message, filename, line);
+    }
+}
 
 void assertNotNullReal(Object *ptr, char *message, char *filename, int line) {
     if (ptr == NULL) {

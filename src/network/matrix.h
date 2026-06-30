@@ -1,6 +1,6 @@
 typedef struct Matrix Matrix;
 
-Matrix* createMatrix(int rowCount, int columnCount, Random random);
+Matrix* createMatrix(int rowCount, int columnCount, Generator generator);
 
 void releaseMatrix(Matrix *matrix);
 

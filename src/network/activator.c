@@ -2,9 +2,9 @@
 #include <math.h>
 
 #include "../common/common.h"
-#include "../random/random.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 
 #include "bias.h"
 #include "vector.h"

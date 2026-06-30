@@ -5,8 +5,10 @@
 #include "../common/constant.h"
 #include "../logger/logger.h"
 #include "../memory/memory.h"
+#include "../datatype/datatype.h"
+#include "../datatype/hashmap.h"
 #include "../except/exception.h"
-#include "../random/random.h"
+#include "../generator/generator.h"
 #include "../dataset/train.h"
 
 #include "config.h"
@@ -15,10 +17,10 @@
 #include "loss.h"
 #include "vector.h"
 #include "matrix.h"
-#include "layer.h"
+#include "linear.h"
 #include "network.h"
 
-struct NeuralNetwork {
+struct DeepNeuralNetwork {
 
     int trainEpochCount;
 
@@ -30,57 +32,67 @@ struct NeuralNetwork {
 
     OutputLayer *outputLayer;
 
-    LinearLayer **hiddenLayerList;
+    AffineLayer **hiddenLayerList;
 
     int hiddenLayerCount;
 };
 
+struct ConvNeuralNetwork {
+
+    int trainEpochCount;
+
+    float learnRateValue;
+
+    Map *tensorLayerMap;
+
+};
+
 extern Logger logger;
 
-static NeuralNetwork *neuralNetwork;
+static DeepNeuralNetwork *deepNeuralNetwork;
 
 Exception TestException = {"", "ewewe", 0};
 
 static int getLabelValueFromOneHot(Vector *vector);
 
-static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork);
+static bool checkNeuralNetwork(DeepNeuralNetwork *neuralNetwork);
 
-bool constructNeuralNetwork(NetworkConfig *config) {
-    neuralNetwork = (NeuralNetwork*)allocate(sizeof(NeuralNetwork));
+bool constructDeepNeuralNetwork(DeepNetworkConfig *config) {
+    DeepNeuralNetwork *neuralNetwork = (DeepNeuralNetwork*)allocate(sizeof(DeepNeuralNetwork));
     if (neuralNetwork != NULL) {
         neuralNetwork->trainBatchSize = getTrainConfigBatchSize(config);
         neuralNetwork->trainEpochCount = getTrainConfigEpochCount(config);
         neuralNetwork->learnRateValue = getLearnRateConfigValue(config);
 
-        LayerConfig *inputLayerConfig = getInputLayerConfig(config);
+        LinearLayerConfig *inputLayerConfig = getInputLayerConfig(config);
         neuralNetwork->inputLayer = buildInputLayer(inputLayerConfig);
 
-        LayerConfig *outputLayerConfig = getOutputLayerConfig(config);
+        LinearLayerConfig *outputLayerConfig = getOutputLayerConfig(config);
         neuralNetwork->outputLayer = buildOutputLayer(outputLayerConfig);
 
         int hiddenLayerCount = getHiddenLayerConfigCount(config);
         if (hiddenLayerCount > 0) {
             neuralNetwork->hiddenLayerCount = hiddenLayerCount;
-            neuralNetwork->hiddenLayerList = (LinearLayer **)allocate(hiddenLayerCount * sizeof(LinearLayer*));
+            neuralNetwork->hiddenLayerList = (AffineLayer **)allocate(hiddenLayerCount * sizeof(AffineLayer*));
 
-            LayerConfig **hiddenLayerConfigList = getHiddenLayerConfigList(config);
+            LinearLayerConfig **hiddenLayerConfigList = getHiddenLayerConfigList(config);
             for (int i=0;i<hiddenLayerCount;++i) {
-                LayerConfig *hiddenLayerConfig = hiddenLayerConfigList[i];
-                neuralNetwork->hiddenLayerList[i] = buildLinearLayer(hiddenLayerConfig);
+                LinearLayerConfig *hiddenLayerConfig = hiddenLayerConfigList[i];
+                neuralNetwork->hiddenLayerList[i] = buildAffineLayer(hiddenLayerConfig);
             }
 
-            BaseLayer *firstHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[0];
-            setPrevLayer((BaseLayer*)firstHiddenLayer, (BaseLayer*)neuralNetwork->inputLayer);
-            setNextLayer((BaseLayer*)neuralNetwork->inputLayer, (BaseLayer*)firstHiddenLayer);
+            VectorLayer *firstHiddenLayer = (VectorLayer*)neuralNetwork->hiddenLayerList[0];
+            setPrevLayer((VectorLayer*)firstHiddenLayer, (VectorLayer*)neuralNetwork->inputLayer);
+            setNextLayer((VectorLayer*)neuralNetwork->inputLayer, (VectorLayer*)firstHiddenLayer);
 
-            BaseLayer *lastHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[hiddenLayerCount - 1];
-            setPrevLayer((BaseLayer*)neuralNetwork->outputLayer, (BaseLayer*)lastHiddenLayer);
-            setNextLayer((BaseLayer*)lastHiddenLayer, (BaseLayer*)neuralNetwork->outputLayer);
+            VectorLayer *lastHiddenLayer = (VectorLayer*)neuralNetwork->hiddenLayerList[hiddenLayerCount - 1];
+            setPrevLayer((VectorLayer*)neuralNetwork->outputLayer, (VectorLayer*)lastHiddenLayer);
+            setNextLayer((VectorLayer*)lastHiddenLayer, (VectorLayer*)neuralNetwork->outputLayer);
 
             for (int i=0;i<hiddenLayerCount;++i) {
                 if (i < hiddenLayerCount-1) {
-                    BaseLayer *prevHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i];
-                    BaseLayer *nextHiddenLayer = (BaseLayer*)neuralNetwork->hiddenLayerList[i+1];
+                    VectorLayer *prevHiddenLayer = (VectorLayer*)neuralNetwork->hiddenLayerList[i];
+                    VectorLayer *nextHiddenLayer = (VectorLayer*)neuralNetwork->hiddenLayerList[i+1];
 
                     setNextLayer(prevHiddenLayer, nextHiddenLayer);
                     setPrevLayer(nextHiddenLayer, prevHiddenLayer);
@@ -91,7 +103,11 @@ bool constructNeuralNetwork(NetworkConfig *config) {
     return checkNeuralNetwork(neuralNetwork);
 }
 
-bool train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
+bool constructConvNeuralNetwork(ConvNetworkConfig *config) {
+    return true;
+}
+
+bool train(DeepNeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
     int trainDataCount = getTrainDataCount(trainBatch);
     for (int i=0;i<trainDataCount;++i) {
         TrainData *trainData = getTrainData(trainBatch, i);
@@ -101,14 +117,14 @@ bool train(NeuralNetwork *this, TrainBatch *trainBatch, int epoch) {
         float lossValue = loss(outputLayer, getLabelForTrain(trainData));
         logger.info("network train with loss value:%.2f, train batch:%i, epoch:%i", lossValue, i, epoch);
 
-        BaseLayer *baseLayer = (BaseLayer*)outputLayer;
+        VectorLayer *baseLayer = (VectorLayer*)outputLayer;
         backward(baseLayer, getLabelForTrain(trainData));
         optimize(baseLayer, this->learnRateValue);
     }
     return true;
 }
 
-bool validate(NeuralNetwork *this, TrainBatch *validateBatch) {
+bool validate(DeepNeuralNetwork *this, TrainBatch *validateBatch) {
     int validateDataCount = getTrainDataCount(validateBatch);
     float percentage = 0.0;
     int successCount = 0;
@@ -130,32 +146,32 @@ bool validate(NeuralNetwork *this, TrainBatch *validateBatch) {
     return true;
 }
 
-Vector* predict(NeuralNetwork *this, Vector *vector) {
+Vector* predict(DeepNeuralNetwork *this, Vector *vector) {
     InputLayer *inputLayer = this->inputLayer;
     OutputLayer *outputLayer = this->outputLayer;
     input(inputLayer, vector);
     return output(outputLayer);
 }
 
-int getTrainBatchSize(NeuralNetwork *this) {
+int getTrainBatchSize(DeepNeuralNetwork *this) {
     if (this != NULL) {
         return this->trainBatchSize;
     }
     return 0;
 }
 
-int getTrainEpochCount(NeuralNetwork *this) {
+int getTrainEpochCount(DeepNeuralNetwork *this) {
     if (this != NULL) {
         return this->trainEpochCount;
     }
     return 0;
 }
 
-NeuralNetwork* getNeuralNetwork() {
-    return neuralNetwork;
+DeepNeuralNetwork* getDeepNeuralNetwork() {
+    return deepNeuralNetwork;
 }
 
-static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
+static bool checkNeuralNetwork(DeepNeuralNetwork *neuralNetwork) {
     if (neuralNetwork == NULL) {
         logger.error("neural network instance could not be constructed successfully^o^");
         return false;
@@ -182,7 +198,7 @@ static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
     }
 
     for (int i=0;i<neuralNetwork->hiddenLayerCount;++i) {
-        LinearLayer *hiddenLayer = neuralNetwork->hiddenLayerList[i];
+        AffineLayer *hiddenLayer = neuralNetwork->hiddenLayerList[i];
         if (hiddenLayer == NULL) {
             logger.error("neural network hidden layer instance could not be constructed successfully^o^");
             return false;
@@ -191,16 +207,20 @@ static bool checkNeuralNetwork(NeuralNetwork *neuralNetwork) {
     return true;
 }
 
-void releaseNeuralNetwork(NeuralNetwork *network) {
+void releaseDeepNeuralNetwork(DeepNeuralNetwork *network) {
     if (network != NULL) {
         releaseInputLayer(network->inputLayer);
         releaseOutputLayer(network->outputLayer);
 
         for (int i=0;i<network->hiddenLayerCount;++i) {
-            releaseLinearLayer(network->hiddenLayerList[i]);
+            releaseAffineLayer(network->hiddenLayerList[i]);
         }
         release(network);
     }
+}
+
+void releaseConvNeuralNetwork(ConvNeuralNetwork *network) {
+    
 }
 
 static int getLabelValueFromOneHot(Vector *vector) {

@@ -4,10 +4,10 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
-#include "../random/random.h"
 #include "../memory/memory.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 #include "../dataset/train.h"
 #include "../file/file.h"
 #include "../json/json.h"
@@ -18,9 +18,9 @@
 #include "vector.h"
 #include "loss.h"
 #include "config.h"
-#include "layer.h"
+#include "linear.h"
 
-struct LayerConfig {
+struct LinearLayerConfig {
 
     bool isOutputLayer;
 
@@ -35,7 +35,21 @@ struct LayerConfig {
     ActivatorLossKind activatorLossKind;
 };
 
-struct NetworkConfig {
+struct ConvLayerConfig{
+
+    int fieldSize;
+
+    int channelCount;
+};
+
+struct PoolLayerConfig{
+    
+    int poolSize;
+
+    int poolStride;
+};
+
+struct DeepNetworkConfig {
 
     int trainBatchSize;
 
@@ -45,20 +59,29 @@ struct NetworkConfig {
 
     int hiddenLayerConfigCount;
 
-    LayerConfig *inputLayerConfig;
+    LinearLayerConfig *inputLayerConfig;
 
-    LayerConfig *outputLayerConfig;
+    LinearLayerConfig *outputLayerConfig;
 
-    LayerConfig **hiddenLayerConfigList;
+    LinearLayerConfig **hiddenLayerConfigList;
+};
+
+struct ConvNetworkConfig {
+
+    int trainBatchSize;
+
+    int trainEpochCount;
+
+    float learnRateValue;
 };
 
 static Exception FileOperateException = {FileOperateExceptionType};
 static Exception MemoryAllocException = {MemoryAllocExceptionType};
 static Exception ConfigErrorException = {ConfigErrorExceptionType};
 
-static NetworkConfig* parseConfig(char *content);
+static DeepNetworkConfig* parseConfig(char *content);
 
-NetworkConfig* loadNetworkConfig(char *filepath) {
+DeepNetworkConfig* loadNetworkConfig(char *filepath) {
     File *configFile = openFile(filepath, O_RDONLY);
     if (configFile == NULL) {
         throw(&FileOperateException, "config open network configuration file error for existence or permission reason");
@@ -67,16 +90,16 @@ NetworkConfig* loadNetworkConfig(char *filepath) {
     char *content = readCharString(configFile);
     closeFile(configFile);
 
-    NetworkConfig *networkConfig = parseConfig(content);
+    DeepNetworkConfig *networkConfig = parseConfig(content);
     release(content);
     
     return networkConfig;
 }
 
-void releaseNetworkConfig(NetworkConfig *config) {
+void releaseDeepNetworkConfig(DeepNetworkConfig *config) {
     if (config != NULL) {
         for (int i=0;i<config->hiddenLayerConfigCount;++i) {
-            LayerConfig *hiddenLayerConfig = config->hiddenLayerConfigList[i];
+            LinearLayerConfig *hiddenLayerConfig = config->hiddenLayerConfigList[i];
             release(hiddenLayerConfig);
         }
         release(config->inputLayerConfig);
@@ -86,19 +109,19 @@ void releaseNetworkConfig(NetworkConfig *config) {
     }
 }
 
-static NetworkConfig* createAndInitialize() {
-    NetworkConfig *networkConfig = (NetworkConfig *)allocate(sizeof(NetworkConfig));
+static DeepNetworkConfig* createAndInitialize() {
+    DeepNetworkConfig *networkConfig = (DeepNetworkConfig *)allocate(sizeof(DeepNetworkConfig));
     if (networkConfig == NULL) {
         return NULL;
     }
 
-    networkConfig->inputLayerConfig = (LayerConfig *)allocate(sizeof(LayerConfig));
+    networkConfig->inputLayerConfig = (LinearLayerConfig *)allocate(sizeof(LinearLayerConfig));
     if (networkConfig->inputLayerConfig == NULL) {
         release(networkConfig);
         return NULL;
     }
 
-    networkConfig->outputLayerConfig = (LayerConfig *)allocate(sizeof(LayerConfig));
+    networkConfig->outputLayerConfig = (LinearLayerConfig *)allocate(sizeof(LinearLayerConfig));
     if (networkConfig->outputLayerConfig == NULL) {
         release(networkConfig);
         release(networkConfig->outputLayerConfig);
@@ -108,17 +131,17 @@ static NetworkConfig* createAndInitialize() {
     return networkConfig;
 }
 
-static NetworkConfig* initializeHiddenLayerConfig(NetworkConfig* config, int hiddenLayerCount) {
+static DeepNetworkConfig* initializeHiddenLayerConfig(DeepNetworkConfig* config, int hiddenLayerCount) {
     config->hiddenLayerConfigCount = hiddenLayerCount;
-    config->hiddenLayerConfigList = (LayerConfig**)allocate(sizeof(LayerConfig*) * hiddenLayerCount);
+    config->hiddenLayerConfigList = (LinearLayerConfig**)allocate(sizeof(LinearLayerConfig*) * hiddenLayerCount);
     for (int i=0;i<hiddenLayerCount;++i) {
-        config->hiddenLayerConfigList[i] = (LayerConfig*)allocate(sizeof(LayerConfig));
+        config->hiddenLayerConfigList[i] = (LinearLayerConfig*)allocate(sizeof(LinearLayerConfig));
     }
     return config;
 }
 
-static NetworkConfig* parseConfig(char *content) {
-    NetworkConfig *networkConfig = createAndInitialize();
+static DeepNetworkConfig* parseConfig(char *content) {
+    DeepNetworkConfig *networkConfig = createAndInitialize();
     if (networkConfig == NULL) {
         throw(&MemoryAllocException, "can not allocate memory for network config!");
     }
@@ -280,91 +303,91 @@ static NetworkConfig* parseConfig(char *content) {
     return networkConfig;
 }
 
-int getTrainConfigBatchSize(NetworkConfig *config) {
+int getTrainConfigBatchSize(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->trainBatchSize;
     }
     return 0;
 }
 
-int getTrainConfigEpochCount(NetworkConfig *config) {
+int getTrainConfigEpochCount(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->trainEpochCount;
     }
     return 0;
 }
 
-float getLearnRateConfigValue(NetworkConfig *config) {
+float getLearnRateConfigValue(DeepNetworkConfig *config) {
         if (config != NULL) {
         return config->learnRateValue;
     }
     return 0.0;
 }
 
-int getHiddenLayerConfigCount(NetworkConfig *config) {
+int getHiddenLayerConfigCount(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->hiddenLayerConfigCount;
     }
     return 0;
 }
 
-LayerConfig* getInputLayerConfig(NetworkConfig *config) {
+LinearLayerConfig* getInputLayerConfig(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->inputLayerConfig;
     }
     return NULL;
 }
 
-LayerConfig* getOutputLayerConfig(NetworkConfig *config) {
+LinearLayerConfig* getOutputLayerConfig(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->outputLayerConfig;
     }
     return NULL;
 }
 
-LayerConfig** getHiddenLayerConfigList(NetworkConfig *config) {
+LinearLayerConfig** getHiddenLayerConfigList(DeepNetworkConfig *config) {
     if (config != NULL) {
         return config->hiddenLayerConfigList;
     }
     return NULL;
 }
 
-bool isOutputLayer(LayerConfig *config) {
+bool isOutputLayer(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->isOutputLayer;
     }
     return false;
 }
 
-int getMatrixConfigRowCount(LayerConfig *config) {
+int getMatrixConfigRowCount(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->matrixRowCount;
     }
     return 0;
 }
 
-int getMatrixConfigColumnCount(LayerConfig *config) {
+int getMatrixConfigColumnCount(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->matrixColumnCount;
     }
     return 0;
 }
 
-int getBiasConfigDimensionCount(LayerConfig *config) {
+int getBiasConfigDimensionCount(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->biasDimensionCount;
     }
     return 0;
 }
 
-ActivatorKind getConfigActivatorKind(LayerConfig *config) {
+ActivatorKind getConfigActivatorKind(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->activatorKind;
     }
     return 0;
 }
 
-ActivatorLossKind getConfigActivatorLossKind(LayerConfig *config) {
+ActivatorLossKind getConfigActivatorLossKind(LinearLayerConfig *config) {
     if (config != NULL) {
         return config->activatorLossKind;
     }

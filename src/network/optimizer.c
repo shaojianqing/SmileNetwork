@@ -2,7 +2,7 @@
 
 #include "../common/common.h"
 #include "../common/constant.h"
-#include "../random/random.h"
+#include "../generator/generator.h"
 
 #include "bias.h"
 #include "matrix.h"

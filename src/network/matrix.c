@@ -2,9 +2,9 @@
 
 #include "../common/common.h"
 #include "../memory/memory.h"
-#include "../random/random.h"
 #include "../except/exception.h"
 #include "../except/assertion.h"
+#include "../generator/generator.h"
 
 #include "bias.h"
 #include "vector.h"
@@ -23,17 +23,17 @@ static Exception MemoryAllocException = {MemoryAllocExceptionType};
 
 static int calculateIndex(Matrix *this, int row, int column);
 
-Matrix* createMatrix(int rowCount, int columnCount, Random random) {
+Matrix* createMatrix(int rowCount, int columnCount, Generator generator) {
     Matrix *matrix = (Matrix*)allocate(sizeof(Matrix));
     if (matrix != NULL) {
         matrix->data = (float *)allocate(sizeof(float)*rowCount*columnCount);
         matrix->rowCount = rowCount;
         matrix->columnCount = columnCount;
         
-        if (random != NULL) {
+        if (generator != NULL) {
             int totalCount = rowCount*columnCount;
             for (int i=0;i<totalCount;++i) {
-                matrix->data[i] = random();
+                matrix->data[i] = generator();
             }
         }
     } else {

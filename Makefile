@@ -13,7 +13,7 @@ TARGET = SmileNetwork
 
 TGT = tgt/*
 
-OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/stack.o tgt/json.o tgt/bytereader.o tgt/exception.o tgt/assertion.o tgt/random.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/optimizer.o tgt/layer.o tgt/loss.o tgt/matrix.o tgt/bias.o tgt/vector.o tgt/mnist.o tgt/train.o
+OBJS = tgt/main.o tgt/memory.o tgt/command.o tgt/logger.o tgt/executor.o tgt/stringtype.o tgt/arraylist.o tgt/hashmap.o tgt/stack.o tgt/json.o tgt/bytereader.o tgt/exception.o tgt/assertion.o tgt/generator.o tgt/printer.o tgt/file.o tgt/model.o tgt/config.o tgt/network.o tgt/activator.o tgt/optimizer.o tgt/linear.o tgt/conv.o tgt/loss.o tgt/matrix.o tgt/tensor.o tgt/bias.o tgt/vector.o tgt/mnist.o tgt/train.o
 
 .PHONY : build clean
 
@@ -49,7 +49,7 @@ tgt/exception.o : src/except/exception.c src/except/exception.h
 tgt/assertion.o : src/except/assertion.c src/except/assertion.h
 	$(CC) $(CCFLAGES) $< -o $@
 
-tgt/random.o : src/random/random.c src/random/random.h
+tgt/generator.o : src/generator/generator.c src/generator/generator.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/printer.o : src/printer/printer.c src/printer/printer.h
@@ -73,13 +73,19 @@ tgt/activator.o : src/network/activator.c src/network/activator.h
 tgt/optimizer.o : src/network/optimizer.c src/network/optimizer.h
 	$(CC) $(CCFLAGES) $< -o $@
 
-tgt/layer.o : src/network/layer.c src/network/layer.h
+tgt/linear.o : src/network/linear.c src/network/linear.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/conv.o : src/network/conv.c src/network/conv.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/loss.o : src/network/loss.c src/network/loss.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/bias.o : src/network/bias.c src/network/bias.h
+	$(CC) $(CCFLAGES) $< -o $@
+
+tgt/tensor.o : src/network/tensor.c src/network/tensor.h
 	$(CC) $(CCFLAGES) $< -o $@
 
 tgt/matrix.o : src/network/matrix.c src/network/matrix.h

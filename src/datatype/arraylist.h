@@ -1,28 +1,20 @@
 
-typedef struct ArrayList ArrayList;
+typedef struct List List;
 
-struct ArrayList {
+struct List {
+
+	bool (*add)(List *this, Object *object);
+
+	Object* (*get)(List *this, int index);
+
+	bool (*remove)(List *this, Object *object);
 	
-	Object **list;
+	bool (*containsObject)(List *this, Object *object);
 
-	int capacity;
-
-	int size;
-
-	int (*getSize)(ArrayList *this);
-
-	bool (*add)(ArrayList *this, Object *object);
-
-	Object* (*get)(ArrayList *this, int index);
-
-	bool (*remove)(ArrayList *this, Object *object);
-	
-	bool (*containsObject)(ArrayList *this, Object *object);
-
-	EqualFunc equalFunc;
+	int (*getSize)(List *this);
 };
 
-ArrayList *createArrayList(EqualFunc equalFunc, int capacity);
+List *createArrayList(EqualFunc equalFunc, int capacity);
 
-void releaseArrayList(ArrayList *this);
+void releaseArrayList(List *this);
 

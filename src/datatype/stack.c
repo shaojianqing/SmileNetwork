@@ -6,70 +6,110 @@
 
 #include "stack.h"
 
-struct Stack {
+typedef struct StackImpl {
+
+    Stack stack;
 
     int elementCapacity;
 
     int currentIndex;
 
     Object **dataList;
-};
 
-static bool resizeStack(Stack *this);
+} StackImpl;
+
+static bool push(Stack *this, Object *element);
+
+static Object* pop(Stack *this);
+
+static Object* peek(Stack *this);
+
+static int getStackCount(Stack *this);
+
+static bool resizeStack(StackImpl *this);
 
 Stack* createStack(int initCapacity) {
-    Stack *stack = (Stack*)allocate(sizeof(Stack));
-    if (stack != NULL) {
-        stack->currentIndex = -1;
-        stack->elementCapacity = initCapacity;
-        stack->dataList = allocate(sizeof(Object*) * initCapacity);
-        if (stack->dataList == NULL) {
-            release(stack);
+    StackImpl *stackImpl = (StackImpl*)allocate(sizeof(Stack));
+    if (stackImpl != NULL) {
+        Stack *stack = (Stack*)stackImpl;
+        stack->push = push;
+        stack->pop = pop;
+        stack->peek = peek;
+        stack->getStackCount = getStackCount;
+
+        stackImpl->currentIndex = -1;
+        stackImpl->elementCapacity = initCapacity;
+        stackImpl->dataList = allocate(sizeof(Object*) * initCapacity);
+        if (stackImpl->dataList == NULL) {
+            release(stackImpl);
             return NULL;
         }
     }
-    return stack;
+    return (Stack*)stackImpl;
 }
 
-bool push(Stack *this, Object *element) {
-    if (this->currentIndex == this->elementCapacity - 1) {
-        bool success = resizeStack(this);
-        if (!success) {
-            return false;
+void releaseStack(Stack *stack) {
+    if (stack != NULL) {
+        StackImpl *stackImpl = (StackImpl*)stack;
+        release(stackImpl->dataList);
+        release(stackImpl);
+    }
+}
+
+static bool push(Stack *this, Object *element) {
+    if (this != NULL) {
+        StackImpl *stackImpl = (StackImpl*)this;
+        if (stackImpl->currentIndex == stackImpl->elementCapacity - 1) {
+            bool success = resizeStack(stackImpl);
+            if (!success) {
+                return false;
+            }
+        }
+        stackImpl->currentIndex++;
+        stackImpl->dataList[stackImpl->currentIndex] = element;
+        return true;
+    }
+    return false;
+}    
+
+static Object* pop(Stack *this) {
+    if (this != NULL) {
+        StackImpl *stackImpl = (StackImpl*)this;
+        if (stackImpl->currentIndex < 0) {
+            return NULL;
+        }
+        Object *element = stackImpl->dataList[stackImpl->currentIndex];
+        stackImpl->dataList[stackImpl->currentIndex] = NULL;
+        stackImpl->currentIndex--;
+        return element;
+    }
+    return NULL;
+}
+
+static Object* peek(Stack *this) {
+    if (this != NULL) {
+        StackImpl *stackImpl = (StackImpl*)this;
+        if (stackImpl->currentIndex < 0) {
+            return NULL;
+        }
+        return stackImpl->dataList[stackImpl->currentIndex];
+    }
+    return NULL;
+}
+
+static int getStackCount(Stack *this) {
+    if (this != NULL) {
+        StackImpl *stackImpl = (StackImpl*)this;
+        if (stackImpl->currentIndex >= 0) {
+            return stackImpl->currentIndex + 1;
+        } else {
+            return 0;
         }
     }
-
-    this->currentIndex++;
-    this->dataList[this->currentIndex] = element;
-    return true;
+    return 0;
 }
 
-Object* pop(Stack *this) {
-    if (this->currentIndex < 0) {
-        return NULL;
-    }
-    Object *element = this->dataList[this->currentIndex];
-    this->dataList[this->currentIndex] = NULL;
-    this->currentIndex--;
-    return element;
-}
-
-Object* peek(Stack *this) {
-    if (this->currentIndex < 0) {
-        return NULL;
-    }
-    return this->dataList[this->currentIndex];
-}
-
-int getStackCount(Stack *this) {
-    if (this->currentIndex >= 0) {
-        return this->currentIndex + 1;
-    } else {
-        return 0;
-    }
-}
-
-static bool resizeStack(Stack *this) {
+static bool resizeStack(StackImpl *this) {
     Object **originDataList = this->dataList;
     this->dataList = allocate(this->elementCapacity * 2);
     if (this->dataList == NULL) {
