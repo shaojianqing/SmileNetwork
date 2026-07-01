@@ -29,3 +29,5 @@ int getTrainEpochCount(DeepNeuralNetwork *this);
 int getTrainBatchSize(DeepNeuralNetwork *this);
 
 DeepNeuralNetwork* getDeepNeuralNetwork();
+
+ConvNeuralNetwork* getConvNeuralNetwork();

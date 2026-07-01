@@ -7,6 +7,8 @@
 #include "../except/exception.h"
 #include "../except/assertion.h"
 #include "../generator/generator.h"
+#include "../datatype/stringtype.h"
+#include "../json/json.h"
 
 #include "bias.h"
 #include "config.h"
@@ -111,8 +113,8 @@ OutputLayer* buildOutputLayer(LinearLayerConfig *config) {
             return NULL;
         }
 
-        if (isOutputLayer(config)) {
-            ActivatorLossKind activatorLossKind = getConfigActivatorLossKind(config);
+        if (isLinearOutputLayer(config)) {
+            ActivatorLossKind activatorLossKind = getLinearConfigActivatorLossKind(config);
             Activator *activator = getActivatorByActivatorLossKind(activatorLossKind);
             if (activator != NULL) {
                 baseLayer->activator = activator;
@@ -162,26 +164,14 @@ AffineLayer* buildAffineLayer(LinearLayerConfig *config) {
 }
 
 static bool prepareBaselayer(VectorLayer *baseLayer, LinearLayerConfig *config) {
-    int matrixConfigRowCount = getMatrixConfigRowCount(config);
-    int matrixConfigColumnCount = getMatrixConfigColumnCount(config);
-    Matrix *modelMatrix = createMatrix(matrixConfigRowCount, matrixConfigColumnCount, matrixGenerator);
-    if (modelMatrix != NULL) {
-        baseLayer->modelMatrix = modelMatrix;
-    } else {
-        logger.error("create model metrix failure when build base layer for memory allocation error^o^");
-        return false;
-    }
+    int matrixConfigRowCount = getLinearMatrixConfigRowCount(config);
+    int matrixConfigColumnCount = getLinearMatrixConfigColumnCount(config);
+    baseLayer->modelMatrix = createMatrix(matrixConfigRowCount, matrixConfigColumnCount, matrixGenerator);
 
-    int biasDimensionCount = getBiasConfigDimensionCount(config);
-    Bias *modelBias = createBias(biasDimensionCount, biasGenerator);
-    if (modelBias != NULL) {
-        baseLayer->modelBias = modelBias;
-    } else {
-        logger.error("create model bias failure when build base layer for memory allocation error^o^");
-        return false;
-    }
+    int biasDimensionCount = getLinearBiasConfigDimensionCount(config);
+    baseLayer->modelBias = createBias(biasDimensionCount, biasGenerator);
 
-    ActivatorKind activatorKind = getConfigActivatorKind(config);
+    ActivatorKind activatorKind = getLinearConfigActivatorKind(config);
     Activator *activator = getActivator(activatorKind);
     if (activator != NULL) {
         baseLayer->activator = activator;

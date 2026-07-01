@@ -10,11 +10,12 @@
 #include "../datatype/datatype.h"
 #include "../printer/printer.h"
 #include "../datatype/stringtype.h"
+#include "../generator/generator.h"
+#include "../json/json.h"
 #include "../dataset/mnist.h"
 #include "../dataset/train.h"
 #include "../network/config.h"
 #include "../network/activator.h"
-#include "../generator/generator.h"
 #include "../network/bias.h"
 #include "../network/loss.h"
 #include "../network/vector.h"
@@ -32,18 +33,39 @@ void loadConfigExecutor(Command *command) {
         String *name = getCommandName(command);
         String *parameter = getCommandParam(command);
         
-        DeepNetworkConfig *config = loadNetworkConfig(parameter->getValue(parameter));
-        DeepNeuralNetwork *network = getDeepNeuralNetwork();
-        if (network != NULL) {
-            releaseDeepNeuralNetwork(network);
-        }
+        char *configFilepath = parameter->getValue(parameter);
+        Json *configJson = loadJsonConfigData(configFilepath);
+        char *networkType = getNetworkConfigType(configJson);
+        if (strcasecmp(DEEP_NETWORK_TYPE, networkType) == 0) {
+            DeepNeuralNetwork *currentNetwork = getDeepNeuralNetwork();
+            if (currentNetwork != NULL) {
+                releaseDeepNeuralNetwork(currentNetwork);
+            }
 
-        bool success = constructDeepNeuralNetwork(config);
-        releaseDeepNetworkConfig(config);
-        if (success) {
-            printMessage(WHITE, "Neural network has been constructed and initialized successfully^+^");
+            DeepNetworkConfig *config = loadDeepNetworkConfig(configJson);
+            bool success = constructDeepNeuralNetwork(config);
+            releaseDeepNetworkConfig(config);
+            if (success) {
+                printMessage(WHITE, "Deep neural network has been constructed and initialized successfully^+^");
+            } else {
+                printMessage(RED, "Deep neural network construction encounters error, please check logs^o^");
+            }
+        } else if (strcasecmp(CONV_NETWORK_TYPE, networkType) == 0) {
+            ConvNeuralNetwork *currentNetwork = getConvNeuralNetwork();
+            if (currentNetwork != NULL) {
+                releaseConvNeuralNetwork(currentNetwork);
+            }
+
+            ConvNetworkConfig *config = loadConvNetworkConfig(configJson);
+            bool success = constructConvNeuralNetwork(config);
+            releaseConvNetworkConfig(config);
+            if (success) {
+                printMessage(WHITE, "Convolution neural network has been constructed and initialized successfully.");
+            } else {
+                printMessage(RED, "Convolution neural network construction encounters error, please check logs!");
+            }
         } else {
-            printMessage(RED, "Neural network construction encounters error, please check logs^o^");
+            printMessage(RED, "network type is not illegal here, please check configuration file!");
         }
     } uncaught {
         Exception *ex = fetchException();
@@ -210,12 +232,29 @@ void quitExecutor(Command *command) {
 }
 
 bool loadConfigRequireConfirm(Command *command) {
-    DeepNeuralNetwork *network = getDeepNeuralNetwork();
-    if (network != NULL) {
-        printMessage(YELLOW, "Do you really want to load model configuration from file[Yes|No]??");
-        return true;
+    String *parameter = getCommandParam(command);
+    char *configFilepath = parameter->getValue(parameter);
+    Json *configJson = loadJsonConfigData(configFilepath);
+    char *networkType = getNetworkConfigType(configJson);
+    if (strcasecmp(DEEP_NETWORK_TYPE, networkType) == 0) {
+        DeepNeuralNetwork *network = getDeepNeuralNetwork();
+        if (network != NULL) {
+            printMessage(YELLOW, "Do you really want to load model configuration from file[Yes|No]??");
+            return true;
+        } else {
+            return false;
+        }
+    } else if (strcasecmp(CONV_NETWORK_TYPE, networkType) == 0) {
+        ConvNeuralNetwork *network = getConvNeuralNetwork();
+        if (network != NULL) {
+            printMessage(YELLOW, "Do you really want to load model configuration from file[Yes|No]??");
+            return true;
+        } else {
+            return false;
+        }
     } else {
-        return false;
+        printMessage(RED, "network type is not illegal here, please check configuration file^o^");
+        return true;
     }
 }
 

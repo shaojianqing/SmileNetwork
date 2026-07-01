@@ -293,6 +293,7 @@ String* getCommandParam(Command *this) {
 }
 
 void showNetworkInfo() {
+    printMessage(YELLOW, "\n");
     printMessage(YELLOW, "  ***  **   ** **** **    *****   *   ** ***** **    ** *****        *      **      *   ** ***** ****** **         **  *****  *****   *** **   ");
     printMessage(YELLOW, " ** ** *******  **  **    **      **  ** **    **    ** **   **     ***     **      **  ** **    ****** **         ** **   ** **   ** ** **    ");
     printMessage(YELLOW, " **    ** * **  **  **    ****    *** ** ****  **    ** **   **    ** **    **      *** ** ****    **    **   *    ** **   ** **   ** ****     ");
