@@ -1,2 +1,2 @@
 # SmileNetwork
-SmileNetwork is a artificial deep neural network for image and pattern recognition‌^~^
+SmileNetwork is an artificial deep neural network framework for image and pattern recognition‌.
